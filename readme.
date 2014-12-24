@@ -1,0 +1,306 @@
+/*!
+ \mainpage Project Documentation from .dx
+
+  <b><center><hr>
+  National Technical University of Athens <br>
+  Dionysos Satellite Observatory     <br>
+  Higher Geodesy Laboratory        <br>
+  http://dionysos.survey.ntua.gr
+  </center></b><hr>
+ 
+ \section sec_intro Introduction
+ ...section 1 stuff...
+ 
+ \section sec_install Installation
+ ... section 2 stuff...
+ 
+ \section sec_datetime Datetime Library
+
+  \subsection datetime1 General
+    The datetime library constists of functions and classes to manipulate datetime
+    events. It is closely related to Standards Of Fundamental Astronomy (SOFA) 
+    \cite sofa software, released by the International Astronomical Union (IAU).
+    The basic class is the datetime class which is designed to hold a specific
+    epoch.
+
+  \subsection datetime2 Date Formats
+    <b><i>Julian Date</i></b><br>
+    Julian Date is a continuous count of days. JD zero is located about 
+    7000 years ago. For example, JD 2449443.5 was the midnight on which 1994 
+    April 1 commenced.
+    <br><b><i>Modified Julian Date</i></b><br>
+    Because of the unwieldy size of Julian Dates and the awkwardness of the 
+    half-day offset, it is accepted practice to remove the leading '24' and the
+    trailing '.5', producing what is called the Modified Julian Date:
+    <br><tt><CENTER>MJD = JD - 2400000.5</CENTER></tt><br>
+    Thus 1994 April 1 commenced at MJD 49443.0.
+
+    <blockquote>
+    The &ldquo;standard epoch&rdquo; for modern astrometric reference data, designated
+    J2000.0, is expressed as a TT instant: 
+    <center><b><tt>J2000.0 is 2000 January 1, 12<sup>h</sup>TT (JD 2451545.0 TT) at the geocenter </tt></b></center>
+    </blockquote>
+
+  \subsection datetime3 Time Scales
+    There are two classes of time scales used in astronomy, one based on the
+    SI (atomic) second, the other based on the rotation of the Earth.
+    Time scales based on the SI second include TAI and TT for practical applications, and TCG and 
+    TCB for theoretical developments. The latter are to be used for relativistically correct 
+    dynamical theories in the geocentric and barycentric reference systems, respectively. 
+    Closely related to these are two time scales, TDB and T<sub>eph</sub>, used in the current 
+    generation of ephemerides. Time scales based on the rotation of the Earth include mean and 
+    apparent sidereal time and UT1. Because of irregularities in the Earth's rotation, and its 
+    tidal deceleration, Earth-rotation-based time scales do not advance at a uniform rate, and 
+    they increasingly lag behind the SI-second-based time scales. UT1 is now defined to be a linear 
+    function of a quantity called the <i>Earth Rotation Angle</i>, &theta;. The widely disseminated 
+    time scale UTC is a hybrid: it advances by SI seconds but is subject to one-second corrections 
+    <i>(leap seconds)</i> to keep it within 0.<sup>s</sup>9 of UT1.
+  -# <b><i>TAI (International Atomic Time):</i></b> the official timekeeping standard.
+    The unit of proper time is the SI second, defined as &ldquo;the duration of 9,192,631,770 periods
+    of the radiation corresponding to the transition between the two hyperfine levels of the 
+    ground state of the caesium 133 atom&rdquo;, the latter being at 0 K and in zero magnetic field. 
+    The duration was chosen to match the existing astronomical time scale, and is consequently 
+    a fossil of the solar day length during the 19th century. The SI second is the unit of TAI
+    and UTC, and is inherited by the relativistic time scales TCG and TCB.
+    TAI is a laboratory time scale, independent of astronomical phenomena apart from having been
+    synchronized to solar time when first introduced (at the start of 1958). It is realized through
+    a changing population of about 200 high-precision atomic clocks held at standards institutes
+    in various countries. There is an elaborate process of continuous intercomparison, leading to a
+    weighted average of all the clocks involved. TAI is close to proper time for an observer on the
+    geoid, and is an appropriate choice for terrestrial applications where continuity through UTC
+    leap seconds is a requirement. It is not disseminated directly as a time service, but
+    can easily be realized from GPS or UTC. [
+    <tt><small>The Global Positioning System (GPS) maintains its own atomic time scale, steered to 
+    track UTC without any adjustment for leap seconds implemented after 1980. Because GPS time was 
+    set to match UTC in 1980, it inherited the TAI−UTC value from that era. Consequently, GPS time 
+    remains forever 19 s behind TAI, to sub-microsecond accuracy.</small></tt>]
+  -# <b><i>UTC (Coordinated Universal Time):</i></b> the basis of civil time.
+    UTC is a compromise between the demands of precise timekeeping and the desire to maintain
+    the current relationship between civil time and daylight. Since its introduction in 1960, UTC
+    has been kept roughly in step with UT1 by a variety of adjustments agreed in advance and
+    then carried out in a coordinated manner by the providers of time services -hence the name.
+    Though rate changes were used until 1972, since then all such adjustments have been made by
+    occasionally inserting a whole second, called a leap second, a procedure that can be thought of
+    as stopping the UTC clock for a second to let the Earth catch up.
+    To obtain UT1 starting from UTC, it is necessary to look up the value of &Delta;UT1 = UT1−UTC for
+    the date concerned in tables published by the International Earth Rotation Service (IERS);
+    this is then added to the UTC. The quantity
+    UT1−UTC, which typically changes by 1-2 ms per day, can be obtained only by observation, 
+    principally very long baseline interferometry (VLBI) using extragalactic radio sources, though
+    seasonal effects are present and the IERS listings are able to predict some way into the future 
+    with adequate accuracy for most applications.
+    <b>Note that UTC has to be expressed as hours, minutes and seconds (or at least in seconds in a
+    given day) if leap seconds are to be taken into account in the correct manner.</b> In particular, it
+    is inappropriate to express UTC as a Julian Date, because there will be an ambiguity during a
+    leap second—so that for example 
+    1994 June 30 23<sup>h</sup>59<sup>m</sup>60<sup>s</sup>.0 and 
+    1994 July 1 00<sup>h</sup>00<sup>m</sup>00<sup>s</sup>.0 would
+    both come out as MJD 49534.00000 -and because subtracting two such JDs would not yield the
+    correct interval in cases that contain leap seconds.
+  -# <b><i>UT1 (Universal Time):</i></b> based on Earth rotation.
+    UT1 (or plain UT) is the modern equivalent of mean solar time, and is really an angle rather than
+    time in the physics sense. Originally defined in terms of a point in the sky called the &ldquo;fictitious
+    mean Sun&rdquo;, UT1 is now defined through its relationship with Earth rotation angle (formerly
+    through sidereal time). Because the Earth's rotation rate is slightly irregular -for geophysical
+    reasons- and is gradually decreasing, the UT1 second is not precisely matched to the SI second.
+    This makes UT1 itself unsuitable for use as a time scale in physics applications. However, some
+    applications do require UT1, such as pointing a telescope or antenna at a celestial target, delay
+    calculations in interferometers, and diurnal aberration, parallax and Doppler corrections.
+  -# <b><i>TT (Terrestrial Time):</i></b> used for solar system ephemeris look-up.
+    The transformation from one time scale to the next can take a number of forms. In some 
+    cases, for example TAI to TT, it is simply a fixed offset. In others, for example TAI 
+    to UT1, it is an offset that depends on observations and cannot be predicted in advance 
+    (or only partially). Some time scales, for example TT and TCG, are linearly related, 
+    with a rate change as well as an offset. Others, for example TCG and TCB, require a 
+    4-dimensional spacetime transformation.
+    Terrestrial time, TT (called TDT between 1984 and 2000), is the theoretical time scale for clocks
+    at sea-level: for practical purposes it is tied to TAI through the fixed formula:
+    <br><center><tt>TT = TAI + 32.184s.</tt></center><br>
+    Calculating TT from UTC, rather than TAI, requires leap seconds to be taken into account: the
+    quantity &Delta;TT = TT - UTC for the UTC in question can be deduced from information provided
+    by the IERS.
+
+    In the spacetime coordinates <tt>(t, x, y, z)</tt> of an event, the temporal coordinate,
+    \p t, is the <b>proper time</b> that would be read by a (perfect) clock at that location. 
+    But in some applications, such as the analysis of pulsar observations, it is convenient for
+    the proper time to be remapped into a differently curved spacetime, in which analysis is 
+    simpler and physical interpretation more direct: this introduces the so-called coordinate time
+    scales TCG, TCB and TDB. Proper time is in fact the exception rather than the rule: even TAI is,
+    strictly speaking, a coordinate time scale, and the proper time read by the observer’s clock
+    must in principle undergo a preliminary site-dependent General Relativity transformation 
+    before the diagram can be applied. But for terrestrial observers proper time can, in practice,
+    be regarded as the same as TAI, true to picosecond accuracy in the case of clocks at sea level.
+
+  \subsection datetime4 Leap Seconds
+    Leap seconds occur usually at the end of December or June. Because on the
+    average the solar day is now 1-2 ms longer than the nominal 86,400 SI seconds,
+    accumulating to 1s over a period of 18 months to a few years, leap seconds 
+    are in practice always positive; however, provision exists for negative leap
+    seconds if needed. Each time a leap second is introduced, the offset 
+    <br><tt><CENTER> &Delta;AT = TAI−UTC </CENTER></tt><br>
+    changes by exactly 1s. Up-to-date information on TAI−UTC is available from the IERS.
+
+  \subsection datetime5 Delta T (&Delta;T)
+    The difference between UT1 and TT (formerly ET) is called &Delta;T, and in the present era 
+    can be written out as
+    <br><center><tt>&Delta;T = TT - UT1 = 32<sup>s</sup>.184 + &Delta;AT - &Delta;UT1.</tt></center>
+
+  \subsection datetime6 The dynamical time scales: TT, TCG, TCB and TDB
+    TT is a successor to the former Ephemeris Time, and is what is in practice used to look up
+    solar system ephemerides [
+    <tt><small>TDB or a specific time scale belonging to the ephemeris concerned (denoted T<sub>eph</sub>) 
+    should really be used. However, going to the trouble of computing TDB or T<sub>eph</sub> is usually not
+    justified: even for the Moon, the error from using TT instead of TDB is less than 1 milliarcsecond.</small></tt>
+    ] The coordinate time scales TCG, TCB and TDB are the independent variable in General Relativity-based 
+    theories which describe the motions of bodies in the vicinity of the Earth (TT, TCG) and in the solar 
+    system (TCB, TDB). Of the four, most observational astronomers will need only TT, and perhaps TDB.
+    TT and TDB are close to each other (less than 2 ms) and run at the same rate as TAI (exactly in
+    the case of TT; on the average in the case of TDB): they are the modern equivalents of ET.
+    The four time scales are tied to TAI though the spacetime event 1997 January 1st 0<sup>h</sup>TAI
+    at the geocenter. The times of that event are as follows:
+    <br><center><tt>
+    TAI 1997 Jan 1 00:00:00 <br>
+    TCG 1997 Jan 1 00:00:00 + 32.184s <br>
+    TCB 1997 Jan 1 00:00:00 + 32.184s <br>
+    TDB 1997 Jan 1 00:00:00 + 32.184s - 65.5&mu;s <br>
+    </tt></center><br>
+    @warning TT (or more correctly TDB) is the time scale to use when interrogating an ephemeris such as
+    JPL DE405, or when using published formulae to predict the position of the Earth or another
+    solar system body. It is an extremely common mistake to use UTC, in which case the
+    results will (at the time of writing) be well over a minute out. (The other common blunder is
+    to use the observer’s time rather than when the light left the source.)
+
+  \subsection datetime7 Useful Relationships
+    From the perspective of a user, the starting point for computing all the time scales isUTC. 
+    From UTC, we can immediately get TAI:
+    <center><tt>TAI = UTC + &Delta;AT</tt></center>
+    where &Delta;AT, an integral number of seconds, is the accumulated number of leap seconds applied to UTC.
+    <center><tt>TT = TAI + 32.<sup>s</sup>184</tt></center>
+    <center><tt>&Delta;UT1 = UT1 - UTC, in seconds</tt></center>
+    &Delta;UT1 can be obtained from tables published by the IERS.<br>
+    <center><tt>UT1 - TAI = &Delta;UT1 - &Delta;AT</tt></center>
+    &Delta;AT can be obtained from calling the function datetime::dat(), while &Delta;UT1 can
+    be obtained from tables published by the IERS.<br>
+    <center><tt>&Delta;T = 32<sup>s</sup>.184 + &Delta;AT - &Delta;UT1</tt></center>
+    for current dates it can be constructed accurately by knowing &Delta;UT1 and &Delta;AT.<br>
+    <center><tt>TDB &asymp; TT + 0<sup>s</sup>.001657 sing</tt></center>
+    <center>where</center>
+    <center><tt>g = 6.24 + 0.017202 &times; (JD<sub>TT</sub> - 2451545)</tt></center>
+    approximates the Earth’s mean anomaly in radians;
+    this simplified expression can be used for applications where the distinction between TT and TDB matters
+    but 50&mu;s accuracy is sufficient, and the date lies in the range 1980-2100.
+
+  \subsection datetime8 Time Scales used by GNSSs
+   - <b><i>GPS Time (GPST) :</i></b>
+    GPS Time (GPST) is a continuous time scale (no leap seconds) defined by the GPS Control segment 
+    on the basis of a set of atomic clocks at the Monitor Stations and onboard the satellites. 
+    It starts at 0<sup>h</sup> UTC (midnight) of January 5th to 6th 1980 (6.<sup>d</sup>0). 
+    At that epoch, the difference TAI-UTC was 19 seconds, thence GPS - UTC = n - 19s. 
+    GPS time is synchronised with the UTC(USNO) at 1 microsecond level (modulo one second), 
+    but actually is kept within 25 ns.
+    [ <a href="http://www.navipedia.net/index.php/Time_References_in_GNSS">Navipedia</a> ]
+   - <b><i>GLONASS Time (GLONASST) :</i></b>
+    GLONASS time is synchronized to the Russian National Etalon time scale UTC(SU).
+    There is a constant offset of 3 hours between UTC(SU) and GLONASS time. The difference 
+    between the UTC(SU) and GLONASST should not exceed 1 millisecond plus three hours 
+    (i.e., GLONASST = UTC(SU) + 3<sup>h</sup> - &tau;, where |&tau;| < 1milisec.), but &tau; 
+    is typically better than 1 microsecond. Unlike GPS, Galileo or BeiDou, GLONASS time 
+    scale implements leap seconds, like UTC.
+    [ <a href="http://www.navipedia.net/index.php/Time_References_in_GNSS">Navipedia</a> ]
+   - <b><i>Galileo System Time (GST) :</i></b>
+    Galileo System Time (GST) is a continuous time scale maintained by the Galileo Central Segment 
+    and synchronised with TAI with a nominal offset below 50 ns. The GST start epoch is 0<sup>h</sup> 
+    UTC on Sunday, 22 August 1999 (midnight between 21 and 22 August). 
+    [ <a href="http://www.navipedia.net/index.php/Time_References_in_GNSS">Navipedia</a> ]
+
+  \subsection datetime9 Julian and Calendar Date
+  January 1<sup>st</sup> 2000 is 2,451,545.0 JD or 51,544.5 MJD.
+  <center><table>
+    <tr>
+      <th>&Delta;T    </th>
+      <th>Seconds     </th>
+      <th>Julian Date </th>
+    </tr>
+    <tr>
+      <td>1 day  </td>
+      <td>86400.0</td>
+      <td>1.0    </td>
+    </tr>
+    <tr>
+      <td>12<sup>h</sup></td>
+      <td>43200         </td>
+      <td>.5            </td>
+    </tr>
+    <tr>
+      <td>&asymp;2<sup>h</sup>.5</td>
+      <td>8640.0         </td>
+      <td>1&times;10<sup>-1</sup></td>
+    </tr>
+    <tr>
+      <td>2<sup>h</sup></td>
+      <td>7200.00      </td>
+      <td>&asymp;8&times;10<sup>-2</sup></td>
+    </tr>
+    <tr>
+      <td>1<sup>h</sup></td>
+      <td>3600.00      </td>
+      <td>&asymp;4&times;10<sup>-2</sup></td>
+    </tr>
+    <tr>
+      <td>&asymp;15<sup>min</sup></td>
+      <td>864.0                  </td>
+      <td>1&times;10<sup>-2</sup></td>
+    </tr>
+    <tr>
+      <td>&asymp;1<sup>min</sup>.5 </td>
+      <td>86.4                     </td>
+      <td>1&times;10<sup>-3</sup>  </td>
+    </tr>
+    <tr>
+      <td>1<sup>min</sup></td>
+      <td>60.0          </td>
+      <td>&asymp;7&times;10<sup>-4</sup></td>
+    </tr>
+    <tr>
+      <td>1<sup>sec</sup></td>
+      <td>1.0            </td>
+      <td>&asymp;1&times;10<sup>-5</sup></td>
+    </tr>
+    <tr>
+      <td><sup>sec</sup>.1</td>
+      <td>.1              </td>
+      <td>&asymp;1&times;10<sup>-6</sup></td>
+    </tr>
+    <tr>
+      <td>1<sup>ms</sup> (millisecond)  </td>
+      <td>1&times;10<sup>-3</sup>       </td>
+      <td>&asymp;1&times;10<sup>-8</sup></td>
+    </tr>
+    <tr>
+      <td>1<sup>&mu;s</sup> (microsecond) </td>
+      <td>1&times;10<sup>-6</sup>         </td>
+      <td>&asymp;1&times;10<sup>-11</sup> </td>
+    </tr>
+    <tr>
+      <td>1<sup>ns</sup> (nanosecond)    </td>
+      <td>1&times;10<sup>-9</sup>        </td>
+      <td>&asymp;1&times;10<sup>-14</sup></td>
+    </tr>
+    <tr>
+      <td>1<sup>ps</sup> (picosecond)    </td>
+      <td>1&times;10<sup>-12</sup>       </td>
+      <td>&asymp;1&times;10<sup>-17</sup></td>
+    </tr>
+  </table></center>
+  A <tt>double-precision</tt> number, should have 15-17 significant decimal digits precision 
+  (see <a href="http://en.wikipedia.org/wiki/Double-precision_floating-point_format">Wikipedia</a>).
+  A <tt>float</tt> number, should have  have 6-9 significant decimal digits precision 
+  (see <a href="http://en.wikipedia.org/wiki/Single-precision_floating-point_format">Wikipedia</a>).
+  
+
+  \subsection datetime10 References
+    -# \cite sofa
+    -# \cite usno179
+    -# Navipedia on GNSS time systems http://www.navipedia.net/index.php/Time_References_in_GNSS
+
+*/
