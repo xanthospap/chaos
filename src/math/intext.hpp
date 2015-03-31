@@ -14,16 +14,22 @@
  * @brief     Various functions to perform interpolation / extrapolation.
  *
  * @details   This file contains a number of functions to perform different
- *            types of interpolation and/or extrapolation. Some of the functions
- *            use unit-offset arrays and NOT zero-offset as in C/C++. These are
- *            usually named as _somefunction_(...args...) while their zero-offset
- *            wrappers are named somefunction(...args...). Do not mix and match!
+ *            types of interpolation and/or extrapolation. Some of the 
+ *            functions use unit-offset arrays and NOT zero-offset as in C/C++.
+ *            These are usually named as _somefunction_(...args...) while 
+ *            their zero-offset wrappers are named somefunction(...args...). 
+ *            Do not mix and match!
  *
  * @note      This library must be compiled under the C++11 standard.
  *
  * @todo      Need to test and provide a test_intext.cpp file, showing usage.
  *
- * @copyright No COPYRIGHT whatsoever.
+ * @copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
+ *            National Technical University of Athens. <br>
+ *            This work is free. You can redistribute it and/or modify it under
+ *            the terms of the Do What The Fuck You Want To Public License,
+ *            Version 2, as published by Sam Hocevar. See http://www.wtfpl.net/
+ *            for more details.
  *
  * <b><center><hr>
  * National Technical University of Athens <br>
