@@ -2,24 +2,24 @@
 #define _
 
 /**
- * @file      
+ * \file      
  *
- * @version   
+ * \version   
  *
- * @author    xanthos@mail.ntua.gr <br>
+ * \author    xanthos@mail.ntua.gr <br>
  *            danast@mail.ntua.gr
  *
- * @date      
+ * \date      
  *
- * @brief     
+ * \brief     
  *
- * @details   
+ * \details   
  *
- * @note      
+ * \note      
  *
- * @todo      
+ * \todo      
  *
- * @copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
+ * \copyright Copyright © 2015 Dionysos Satellite Observatory, <br>
  *            National Technical University of Athens. <br>
  *            This work is free. You can redistribute it and/or modify it under
  *            the terms of the Do What The Fuck You Want To Public License,
