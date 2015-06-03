@@ -90,22 +90,22 @@ class Antenna {
 public:
     
     /// Default constructor
-    Antenna(){ };
+    Antenna() noexcept { };
         
     /// Constructor from Antenna type plus Radome (if any)
-    explicit Antenna (const char*);
+    explicit Antenna (const char*) noexcept;
     
     /// Constructor from Antenna type plus Radome (if any)
-    explicit Antenna (const std::string&);
+    explicit Antenna (const std::string&) noexcept;
     
     /// Copy constructor
-    Antenna(const Antenna& rhs)
+    Antenna(const Antenna& rhs) noexcept
     {
         std::memcpy(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_);
     }
 
     /// Assignment operator
-    Antenna& operator=(const Antenna& rhs)
+    Antenna& operator=(const Antenna& rhs) noexcept
     {
         if (this!=&rhs) {
             std::memcpy(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_);
@@ -114,35 +114,35 @@ public:
     }
 
     /// Equality operator (checks both antenna type and radome)
-    bool operator==(const Antenna& rhs)
+    bool operator==(const Antenna& rhs) noexcept
     {
         return ( !std::strncmp(name_,rhs.name_,_MAX_ANTENNA_SIZE_BYTES_) );
     }
 
     /// Destructor
-    ~Antenna(){ };
+    ~Antenna() noexcept { };
 
     /// Pointer to antenna name
-    inline const char* name() const 
+    inline const char* name() const noexcept
     { return name_; }
 
     /// Pointer to (start of) radome
-    inline const char* radome() const 
+    inline const char* radome() const noexcept
     { return name_+_RADOME_OFFSET_; }
     
     /// Get the radome type (as String)
-    inline std::string radomeToString() const
+    inline std::string radomeToString() const noexcept
     { return std::string { name_+_RADOME_OFFSET_,_ANTENNA_RADOME_SIZE_ }; }
 
     /// Antenna+Radome  as string
-    inline std::string toString() const 
+    inline std::string toString() const noexcept
     { return std::string(name_,_MAX_ANTENNA_SIZE_); }
 
     /// Set the Radome type
-    void setRadome(const char*);
+    void setRadome(const char*) noexcept;
 
     /// Set the Radome type
-    void setRadome(const std::string&);
+    void setRadome(const std::string&) noexcept;
 
 private:
     char name_[_MAX_ANTENNA_SIZE_]; /// combined antenna and radome name

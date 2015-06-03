@@ -12,8 +12,8 @@
  * \param[in] c An array of chars, describing the receiver type (\c const char*).
  *  
  */
-ngpt::Receiver::Receiver (const char* c) {
-
+ngpt::Receiver::Receiver (const char* c) noexcept 
+{
     // copy input string
     std::size_t sz = std::strlen (c);
     sz > ngpt::_RECEIVER_MAX_SIZE_ 
@@ -38,14 +38,14 @@ ngpt::Receiver::Receiver (const char* c) {
  * \param[in] s A string, describing the receiver type (\c string).
  *  
  */
-ngpt::Receiver::Receiver (const std::string& s) {
-      
+ngpt::Receiver::Receiver (const std::string& s) noexcept
+{      
     // copy the input string
-    std::size_t sz = s.size ();
+    std::size_t sz = s.size();
     if (sz > ngpt::_RECEIVER_MAX_SIZE_) {
-        std::copy (s.begin(),s.begin()+ngpt::_RECEIVER_MAX_SIZE_,name_);
+        std::copy(s.begin(),s.begin()+ngpt::_RECEIVER_MAX_SIZE_,name_);
     } else {
-        std::copy (s.begin(),s.end(),name_);
+        std::copy(s.begin(),s.end(),name_);
         while (sz < ngpt::_RECEIVER_MAX_SIZE_) 
             name_[sz++] = ' ';
     }

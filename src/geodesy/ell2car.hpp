@@ -20,7 +20,7 @@ namespace geodesy {
 template<ELLIPSOID E>
 void 
 ell2car(const double& phi,const double& lambda,const double& h,
-        double& x,double& y,double& z)
+        double& x,double& y,double& z) noexcept
 {
     // Eccentricity squared.
     constexpr double e2 { EllipsoidTraits<E>::eccentricitySquared() };

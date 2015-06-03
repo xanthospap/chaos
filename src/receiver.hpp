@@ -64,22 +64,22 @@ class Receiver {
 public:
     
     /// Default constructor
-    Receiver(){ };
+    Receiver() noexcept { };
         
     /// Constructor from receiver type
-    explicit Receiver (const char*);
+    explicit Receiver (const char*) noexcept;
     
     /// Constructor from receiver type
-    explicit Receiver (const std::string&);
+    explicit Receiver (const std::string&) noexcept;
     
     /// Copy constructor
-    Receiver(const Receiver& rhs)
+    Receiver(const Receiver& rhs) noexcept
     {
         std::memcpy(name_,rhs.name_,_RECEIVER_MAX_SIZE_BYTES_);
     }
 
     /// Assignment operator
-    Receiver& operator=(const Receiver& rhs)
+    Receiver& operator=(const Receiver& rhs) noexcept
     {
         if (this!=&rhs) {
             std::memcpy(name_,rhs.name_,_RECEIVER_MAX_SIZE_BYTES_);
@@ -88,20 +88,20 @@ public:
     }
 
     /// Equality operator
-    bool operator==(const Receiver& rhs)
+    bool operator==(const Receiver& rhs) noexcept
     {
         return ( !std::strncmp(name_,rhs.name_,_RECEIVER_MAX_SIZE_) );
     }
 
     /// Destructor
-    ~Receiver(){ };
+    ~Receiver() noexcept { };
 
     /// Pointer to receiver name
-    inline const char* name() const 
+    inline const char* name() const noexcept
     { return name_; }
 
     /// Receiver name as string
-    inline std::string toString() const 
+    inline std::string toString() const noexcept
     { return std::string(name_,_RECEIVER_MAX_SIZE_); }
 
 private:
