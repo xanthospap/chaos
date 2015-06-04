@@ -49,11 +49,6 @@ enum class SATELLITE_SYSTEM : char {
     MIXED
 };
 
-/// A struct to hold pairs of whatever ...
-template<typename T1,typename T2>
-struct _dummy_map_ 
-{T1 index; T2 value;};
-
 /// Traits for Satellite Systems
 template<SATELLITE_SYSTEM S>
 struct SatelliteSystemTraits
@@ -65,16 +60,6 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
 {
     /// Number of valid (nominal) frequencies
     static constexpr std::size_t num_of_freqs { 3 };
-
-    /// Look-up table, holding pairs of [frequency_index, frequency_value]
-    static constexpr _dummy_map_<short int,double> lut [] = {
-        {1, 1575.420e0},
-        {2, 1227.600e0},
-        {5, 1176.450e0}
-    };
-
-    /// Get the nominal frequency value, given the frequency index
-    static constexpr double nominal_frequency(short int f) {};
 };
 
 /// Enumeration for known Obsrvation Types. 
@@ -88,5 +73,10 @@ enum class OBSERVATION_TYPE : char {
     RECEIVER_CHANNEL_NUMBER /// see RINEX v3.02, sec. 5.13
 };
 
-} // end namespace
+/// Struct to hold observable attributes. See RINEX v3.02
+struct Attribute 
+{char c_;};
+
+
+}                                                           // end namespace
 #endif

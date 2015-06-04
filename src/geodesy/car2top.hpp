@@ -11,17 +11,19 @@ namespace geodesy {
  *            is a template function, depending on the ellipsoid parameter;
  *            see ellipsoid.hpp
  *
- * \parameter[in]  xi     Cartesian, x-component of point i, meters.
- * \parameter[in]  yi     Cartesian, y-component of point i, meters.
- * \parameter[in]  zi     Cartesian, z-component of point i, meters.
- * \parameter[in]  xj     Cartesian, x-component of point j, meters.
- * \parameter[in]  yj     Cartesian, y-component of point j, meters.
- * \parameter[in]  zj     Cartesian, z-component of point j, meters.
- * \parameter[out] north  Vector north component, meters.
- * \parameter[out] east   Vector east component, meters.
- * \parameter[out] up     Vector up component, meters.
+ *  \parameter[in]  xi     Cartesian, x-component of point i, meters.
+ *  \parameter[in]  yi     Cartesian, y-component of point i, meters.
+ *  \parameter[in]  zi     Cartesian, z-component of point i, meters.
+ *  \parameter[in]  xj     Cartesian, x-component of point j, meters.
+ *  \parameter[in]  yj     Cartesian, y-component of point j, meters.
+ *  \parameter[in]  zj     Cartesian, z-component of point j, meters.
+ *  \parameter[out] north  Vector north component, meters.
+ *  \parameter[out] east   Vector east component, meters.
+ *  \parameter[out] up     Vector up component, meters.
+ * 
+ *  \throw    Does not throw.
  *
- * \note      The ellispoid is needed to transform the cartesian coordinates of
+ *  \note     The ellispoid is needed to transform the cartesian coordinates of
  *            the (reference) point i to ellispoidal coordinates.
  *
  * Reference: Physical Geodesy, p. 209
@@ -30,7 +32,7 @@ template<ELLIPSOID E>
 void
 car2top(const double& xi,const double& yi, const double& zi,
         const double& xj,const double& yj, const double& zj,
-        double& north, double& east, double& up)
+        double& north, double& east, double& up) noexcept
 {
 
     // Ellipsoidal coordinates of reference point.

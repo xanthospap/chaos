@@ -11,21 +11,23 @@ namespace geodesy {
  *            latitude, longtitude, ellispoidal height). This is a template
  *            function, depending on the ellipsoid parameter; see ellipsoid.hpp
  *
- * \parameter[in]  x      Cartesian, x-component, meters.
- * \parameter[in]  y      Cartesian, y-component, meters.
- * \parameter[in]  z      Cartesian, z-component, meters.
- * \parameter[out] phi    Ellipsoidal latitude, radians.
- * \parameter[out] lambda Ellipsoidal longtitude, radians.
- * \parameter[out] h      Ellipsoidal height, meters.
+ *  \parameter[in]  x      Cartesian, x-component, meters.
+ *  \parameter[in]  y      Cartesian, y-component, meters.
+ *  \parameter[in]  z      Cartesian, z-component, meters.
+ *  \parameter[out] phi    Ellipsoidal latitude, radians.
+ *  \parameter[out] lambda Ellipsoidal longtitude, radians.
+ *  \parameter[out] h      Ellipsoidal height, meters.
  *
- * Reference: Fukushima, T., "Transformation from Cartesian to geodetic 
+ *  \throw    Does not throw.
+ *
+ *  Reference: Fukushima, T., "Transformation from Cartesian to geodetic 
  *            coordinates accelerated by Halley's method", J. Geodesy (2006),
  *            79(12): 689-693
  */
 template<ELLIPSOID E>
 void
 car2ell(const double& x,const double& y, const double& z,
-        double& phi,double& lambda,double& h)
+        double& phi,double& lambda,double& h) noexcept
 {
 
     // Functions of ellipsoid parameters.
