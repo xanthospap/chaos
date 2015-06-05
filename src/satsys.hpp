@@ -78,5 +78,5 @@ struct Attribute
 {char c_;};
 
 
-}                                                           // end namespace
+} // end namespace
 #endif
