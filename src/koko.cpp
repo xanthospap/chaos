@@ -27,7 +27,7 @@
         explicit RawObs(E1 a,E2 b,char c):
             e1_(a),e2_(b),c_(c){ };
         
-        inline std::string toString() const
+        std::string toString() const
         {
             std::string str { '[' };
             str += toChar(e1_);
@@ -46,7 +46,22 @@
             {
                 for (auto i : il) obs_.emplace_back(i);
             }
-
+            
+            void addObs(E1 e1,E2 e2,char c)
+            {
+                obs_.emplace_back( RawObs {e1,e2,c} );
+                RawObs r {e1,e2,c};
+                std::cout<<"\n::called addObs with RO="<<r.toString();
+            }
+            template<typename... Args>
+            void addObs(E1 e1,E2 e2,char c,Args... args)
+            {
+                std::cout<<"\n__PRETTY_FUNCTION__";
+                RawObs r {e1,e2,c};
+                std::cout<<"\n::called Template::addObs RO="<<r.toString();
+                obs_.emplace_back( RawObs {e1,e2,c} );
+                addObs(args...);
+            }
             void print() { 
                 std::cout << "\nObs -> ";
                 for ( auto& i : obs_ ) std::cout << i.toString();
@@ -66,8 +81,9 @@ int main ()
     A i1 { RawObs{ E1::a,E2::b,'i' }, RawObs{ E1::b,E2::c,'x' } };
     i1.print();
 
-    //i1.add_obs( E1::a, E2::b, E3{'i'}, E1::b,E2::c,E3{'x'} );
-    //i1.print();
+    i1.addObs( E1::a, E2::b, 'i', E1::b, E2::c, 'x', 
+               E1::a, E2::b, 'i', E1::a, E2::b, 'l' );
+    i1.print();
 
     std::cout <<"\n";
     return 0;
