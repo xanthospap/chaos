@@ -54,10 +54,14 @@ enum class OBSERVATION_TYPE : char {
     RECEIVER_CHANNEL_NUMBER /// see RINEX v3.02, sec. 5.13
 };
 
-/// Given an observation type, return its identifier
+/// Given an observation type, return its identifier.
 char ObsTypeIdentifier(OBSERVATION_TYPE);
 
+/// Given a char (i.e. identifier), return the observation type.
+OBSERVATION_TYPE charToObsType(char);
+
 /// Struct to hold observable attributes. See RINEX v3.02
+/// A missing attribute (e.g. RINEX v2.xx is always denoted as '?')
 struct Attribute 
 {char c_;};
 
@@ -173,6 +177,9 @@ public:
     }
     
 };
+
+std::vector<GnssObs> resolveRinexObservable(const char*,const short int,std::vector<ngpt::SATELLITE_SYSTEM>&);
+GnssObs resolveRinexObservable(const char*,const short int,SATELLITE_SYSTEM);
 
 }
 #endif

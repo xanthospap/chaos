@@ -37,6 +37,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace ngpt {
 
@@ -64,10 +65,11 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
     /// Identifier
     static constexpr char identifier { 'G' };
     
-    /// Number of valid (nominal) frequencies
-    static constexpr std::size_t num_of_freqs { 3 };
+    /// An assosiative array, containing [band,value] pairs for each frequency
+    static constexpr std::unordered_map<short int,double> frequency_hash_map
+    {{1,1575.42e0}, {2,1227.60e0}, {3,1176.45e0}};
     
-    /// return the nominal frequency, given a band
+    /// Return the nominal frequency, given a band
     static double nominal_frequency(short int i)
     {
         switch ( i ) {
@@ -159,7 +161,7 @@ template<>
 struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>
 {
     /// Identifier
-    static constexpr char identifier { 'Q' };
+    static constexpr char identifier { 'J' };
     
     /// Number of valid (nominal) frequencies
     static constexpr std::size_t num_of_freqs { 4 };
@@ -205,6 +207,9 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::BDS>
 
 /// Given a satellite system, return its identifier
 char SatSysIdentifier(SATELLITE_SYSTEM);
+
+/// Given a char (i.e. identifier), return the corresponding satellite system.
+SATELLITE_SYSTEM charToSatSys(char);
 
 } // end namespace
 #endif
