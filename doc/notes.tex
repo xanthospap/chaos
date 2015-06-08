@@ -140,7 +140,7 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
 {
     /// Identifier
     static constexpr char identifier { 'G' };
-    
+
     /// Return the nominal frequency, given a band
     static double nominal_frequency(short int i)
     {
@@ -279,6 +279,7 @@ Frequencies are easily represented by a \texttt{short int} or \texttt{short unsi
 
 Frequencies are satellite-system-dependent, so it would make sense to include them
 in the satallite system traits. E.g. as an assosiative array.
+
 \begin{lstlisting}
 /// Specialize traits for Satellite System Gps
 template<>
@@ -293,6 +294,33 @@ struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
         { 5, 1176.45e0 },
     };
     
+    /* ...various declerations... */
+}
+\end{lstlisting}
+
+Or, a more compile-time, \texttt{constexpr} way (see \url{http://stackoverflow.com/questions/8026906/constexpr-and-initialization})
+
+\begin{lstlisting}
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /* ...various declerations... */
+    
+    struct freq_pair {
+        short int idx;
+        double val;
+    };
+
+    constexpr freq_pair freq_map[] = {
+        { 1, 1575.42e0 },
+        { 2, 1227.60e0 },
+        { 5, 1176.45e0 }
+    };
+    
+    constexpr bool match(short int i,short int j) {
+        
+
     /* ...various declerations... */
 }
 \end{lstlisting}
