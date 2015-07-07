@@ -19,7 +19,7 @@
  *  \param[in] c An array of chars, describing the receiver type (const char*).
  *  
  */
-ngpt::Receiver::Receiver (const char* c) noexcept 
+ngpt::Receiver::Receiver (const char *c) noexcept 
 {
     // copy input string
     std::size_t sz = std::strlen (c);

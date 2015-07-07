@@ -21,7 +21,7 @@
 
 % warning box
 \definecolor{warningbackground}{RGB}{252,226,158}
-\usepackage{floatflt}
+%\usepackage{floatflt}
 \newcommand{\alertwarningbox}[1]{
     \centering
     \colorbox{warningbackground}{\parbox{400pt} {
@@ -35,11 +35,13 @@
     }
 }
 
-\lstset{language=C++,
+\lstset{
+language=C++,
 basicstyle=\ttfamily,
 keywordstyle=\color{blue}\ttfamily,
 stringstyle=\color{red}\ttfamily,
 commentstyle=\color{green}\ttfamily,
+frame = single,
 morecomment=[l][\color{magenta}]{\#}
 }
 %----------------------------------------------------------------------------------------

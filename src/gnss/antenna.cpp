@@ -25,7 +25,7 @@
  *            http://en.cppreference.com/w/cpp/string/byte/strlen)
  *  
  */
-ngpt::Antenna::Antenna (const char* c) noexcept
+ngpt::Antenna::Antenna (const char *c) noexcept
 {
   // copy input string
   size_t sz = std::strlen(c);
