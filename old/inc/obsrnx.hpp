@@ -1,1 +1,0 @@
-/home/xanthos/Software/chaos-ngpt/src/rinex/ObsRinex/obsrnx.hpp
