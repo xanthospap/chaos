@@ -1,0 +1,96 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+A	koko.cpp	/^            A (std::initializer_list<RawObs>&& il)$/;"	f	class:A
+A	koko.cpp	/^    class A {$/;"	c	file:
+Antenna	antenna.hpp	/^class Antenna {$/;"	c	namespace:ngpt
+Attribute	gnssobs.hpp	/^struct Attribute $/;"	s	namespace:ngpt
+BDS	satsys.hpp	/^    BDS,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+CARRIER_PHASE	gnssobs.hpp	/^    CARRIER_PHASE,$/;"	m	class:ngpt::OBSERVATION_TYPE
+DOPPLER	gnssobs.hpp	/^    DOPPLER,$/;"	m	class:ngpt::OBSERVATION_TYPE
+E1	koko.cpp	/^    enum class E1 : char { a, b, c };$/;"	c	file:
+E2	koko.cpp	/^    enum class E2 : char { a, b, c };$/;"	c	file:
+E3	koko.cpp	/^    struct E3 { $/;"	s	file:
+GALILEO	satsys.hpp	/^    GALILEO,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+GLONASS	satsys.hpp	/^    GLONASS,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+GPS	satsys.hpp	/^    GPS,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+GnssObs	gnssobs.hpp	/^    GnssObs(double c,SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,char a,$/;"	f	class:ngpt::GnssObs
+GnssObs	gnssobs.hpp	/^    GnssObs(std::initializer_list<_RawObs_> ro)$/;"	f	class:ngpt::GnssObs
+GnssObs	gnssobs.hpp	/^    GnssObs(std::initializer_list<cobs_pair> ro)$/;"	f	class:ngpt::GnssObs
+GnssObs	gnssobs.hpp	/^class GnssObs {$/;"	c	namespace:ngpt
+IONOSPHERE_PHASE_DELAY	gnssobs.hpp	/^    IONOSPHERE_PHASE_DELAY, \/\/\/ see RINEX v3.02, sec. 5.12$/;"	m	class:ngpt::OBSERVATION_TYPE
+OBSERVATION_TYPE	gnssobs.hpp	/^enum class OBSERVATION_TYPE : char {$/;"	c	namespace:ngpt
+ObsTypeIdentifier	gnssobs.cpp	/^char ngpt::ObsTypeIdentifier(ngpt::OBSERVATION_TYPE o)$/;"	f	class:ngpt
+PSEUDORANGE	gnssobs.hpp	/^    PSEUDORANGE,$/;"	m	class:ngpt::OBSERVATION_TYPE
+QZSS	satsys.hpp	/^    QZSS,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+RawObs	koko.cpp	/^        explicit RawObs(E1 a,E2 b,char c):$/;"	f	struct:RawObs
+RawObs	koko.cpp	/^    struct RawObs { $/;"	s	file:
+Receiver	receiver.hpp	/^class Receiver {$/;"	c	namespace:ngpt
+SATELLITE_SYSTEM	satsys.hpp	/^enum class SATELLITE_SYSTEM : char {$/;"	c	namespace:ngpt
+SBAS	satsys.hpp	/^    SBAS,$/;"	m	class:ngpt::SATELLITE_SYSTEM
+SIGNAL_STRENGTH	gnssobs.hpp	/^    SIGNAL_STRENGTH,$/;"	m	class:ngpt::OBSERVATION_TYPE
+SatSysIdentifier	satsys.cpp	/^char ngpt::SatSysIdentifier(ngpt::SATELLITE_SYSTEM s)$/;"	f	class:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::BDS>$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::GALILEO>$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::GLONASS>$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::QZSS>$/;"	s	namespace:ngpt
+SatelliteSystemTraits	satsys.hpp	/^struct SatelliteSystemTraits<SATELLITE_SYSTEM::SBAS>$/;"	s	namespace:ngpt
+_GNSSOBS_HPP_	gnssobs.hpp	2;"	d
+_GNSS_ANTENNA_	antenna.hpp	2;"	d
+_GNSS_RECEIVER_	receiver.hpp	2;"	d
+_RawObs_	gnssobs.hpp	/^struct _RawObs_ {$/;"	s	namespace:ngpt
+_SATELLITE_HPP_	satsys.hpp	2;"	d
+a	koko.cpp	/^    enum class E1 : char { a, b, c };$/;"	m	class:E1	file:
+a	koko.cpp	/^    enum class E2 : char { a, b, c };$/;"	m	class:E2	file:
+addObs	koko.cpp	/^            void addObs(E1 e1,E2 e2,char c)$/;"	f	class:A
+addObs	koko.cpp	/^            void addObs(E1 e1,E2 e2,char c,Args... args)$/;"	f	class:A
+addRawObs	gnssobs.hpp	/^    void addRawObs(double c,SATELLITE_SYSTEM s,OBSERVATION_TYPE o,short int f,$/;"	f	class:ngpt::GnssObs
+at_	gnssobs.hpp	/^        :ss_(s),ot_(o),nf_(f),at_(a)$/;"	f	struct:ngpt::_RawObs_
+at_	gnssobs.hpp	/^    Attribute        at_; \/\/\/ Attribute$/;"	m	struct:ngpt::_RawObs_
+b	koko.cpp	/^    enum class E1 : char { a, b, c };$/;"	m	class:E1	file:
+b	koko.cpp	/^    enum class E2 : char { a, b, c };$/;"	m	class:E2	file:
+c_	gnssobs.hpp	/^{char c_;};$/;"	m	struct:ngpt::Attribute
+c_	koko.cpp	/^        E1 e1_; E2 e2_; char c_;$/;"	m	struct:RawObs	file:
+c_	koko.cpp	/^        char c_; $/;"	m	struct:E3	file:
+charToObsType	gnssobs.cpp	/^ngpt::OBSERVATION_TYPE ngpt::charToObsType(char c)$/;"	f	class:ngpt
+charToSatSys	satsys.cpp	/^ngpt::SATELLITE_SYSTEM ngpt::charToSatSys(char c)$/;"	f	class:ngpt
+cobs_pair	gnssobs.hpp	/^    typedef std::pair<double,_RawObs_> cobs_pair;$/;"	t	class:ngpt::GnssObs
+e1_	koko.cpp	/^        E1 e1_; E2 e2_; char c_;$/;"	m	struct:RawObs	file:
+e2_	koko.cpp	/^        E1 e1_; E2 e2_; char c_;$/;"	m	struct:RawObs	file:
+main	koko.cpp	/^int main ()$/;"	f
+name_	antenna.hpp	/^    char name_[_MAX_ANTENNA_SIZE_]; \/\/\/ combined antenna and radome name$/;"	m	class:ngpt::Antenna
+name_	receiver.hpp	/^    char name_[_RECEIVER_MAX_SIZE_]; \/\/\/ Receiver type name$/;"	m	class:ngpt::Receiver
+nf_	gnssobs.hpp	/^    short int        nf_; \/\/\/ Nominal Frequency$/;"	m	struct:ngpt::_RawObs_
+ngpt	antenna.hpp	/^namespace ngpt {$/;"	n
+ngpt	gnssobs.hpp	/^namespace ngpt {$/;"	n
+ngpt	receiver.hpp	/^namespace ngpt {$/;"	n
+ngpt	satsys.hpp	/^namespace ngpt {$/;"	n
+noexcept	antenna.hpp	/^    explicit Antenna (const char*) noexcept;$/;"	m	class:ngpt::Antenna
+noexcept	antenna.hpp	/^    explicit Antenna (const std::string&) noexcept;$/;"	m	class:ngpt::Antenna
+noexcept	antenna.hpp	/^    void setRadome(const char*) noexcept;$/;"	m	class:ngpt::Antenna
+noexcept	antenna.hpp	/^    void setRadome(const std::string&) noexcept;$/;"	m	class:ngpt::Antenna
+noexcept	gnssobs.hpp	/^            short int f,Attribute a) noexcept$/;"	m	struct:ngpt::_RawObs_
+noexcept	gnssobs.hpp	/^            short int f,char c) noexcept$/;"	m	struct:ngpt::_RawObs_
+noexcept	receiver.hpp	/^    explicit Receiver (const char*) noexcept;$/;"	m	class:ngpt::Receiver
+noexcept	receiver.hpp	/^    explicit Receiver (const std::string&) noexcept;$/;"	m	class:ngpt::Receiver
+nominalFrequency	gnssobs.cpp	/^double ngpt::_RawObs_::nominalFrequency() const$/;"	f	class:ngpt::_RawObs_
+nominalFrequency	gnssobs.hpp	/^    double nominalFrequency() const$/;"	f	class:ngpt::GnssObs
+nominal_frequency	satsys.hpp	/^    static double nominal_frequency(short int i)$/;"	f	struct:ngpt::SatelliteSystemTraits
+obs_	gnssobs.hpp	/^        noexcept : obs_()$/;"	f	class:ngpt::GnssObs
+obs_	gnssobs.hpp	/^    std::vector<std::pair<double,_RawObs_>> obs_;$/;"	m	class:ngpt::GnssObs
+obs_	koko.cpp	/^            std::vector<RawObs> obs_;$/;"	m	class:A	file:
+ot_	gnssobs.hpp	/^    OBSERVATION_TYPE ot_; \/\/\/ Observation type$/;"	m	struct:ngpt::_RawObs_
+print	koko.cpp	/^            void print() { $/;"	f	class:A
+resolveRinexObservable	gnssobs.cpp	/^ngpt::GnssObs ngpt::resolveRinexObservable(const char* str,$/;"	f	class:ngpt
+resolveRinexObservable	gnssobs.cpp	/^std::vector<ngpt::GnssObs> ngpt::resolveRinexObservable(const char* str,$/;"	f	class:ngpt
+ss_	gnssobs.hpp	/^    SATELLITE_SYSTEM ss_; \/\/\/ Satellite system$/;"	m	struct:ngpt::_RawObs_
+toChar	koko.cpp	/^    char toChar(E1 e) { $/;"	f
+toChar	koko.cpp	/^    char toChar(E2 e) { $/;"	f
+toString	gnssobs.hpp	/^    inline std::string toString() const$/;"	f	struct:ngpt::_RawObs_
+toString	gnssobs.hpp	/^    std::string toString() const$/;"	f	class:ngpt::GnssObs
+toString	koko.cpp	/^        std::string toString() const$/;"	f	struct:RawObs

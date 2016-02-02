@@ -1,0 +1,346 @@
+ 
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{listings}
+%\usepackage{siunitx} % Provides the \SI{}{} and \si{} command for typesetting SI units
+\usepackage{graphicx} % Required for the inclusion of images
+\usepackage{natbib}   % Required to change bibliography style to APA
+\usepackage{amsmath}  % Required for some math elements
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+\renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number (e.g. section 6)
+
+% warning box
+\definecolor{warningbackground}{RGB}{252,226,158}
+%\usepackage{floatflt}
+\newcommand{\alertwarningbox}[1]{
+    \centering
+    \colorbox{warningbackground}{\parbox{400pt} {
+            \vskip 10pt
+            \begin{floatingfigure}[l]{50pt}
+                \includegraphics[scale=.05]{img/danger.pdf}
+            \end{floatingfigure}
+            #1
+            \vskip 10pt
+        }
+    }
+}
+
+\lstset{
+language=C++,
+basicstyle=\ttfamily,
+keywordstyle=\color{blue}\ttfamily,
+stringstyle=\color{red}\ttfamily,
+commentstyle=\color{green}\ttfamily,
+frame = single,
+morecomment=[l][\color{magenta}]{\#}
+}
+%----------------------------------------------------------------------------------------
+%	DOCUMENT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\title{The ngpt Software Package \\ Reference \& User Guide \\ Dionysos Satellite Observatory, NTUA} % Title
+
+\author{Xanthos \textsc{Papanikolaou} \and Demitris \textsc{Anastasiou}} % Author name
+
+\date{\today} % Date for the report
+
+\begin{document}
+
+\maketitle % Insert the title, author and date
+
+\begin{center}
+\begin{tabular}{l r}
+First Revision: & June 06, 2015 \\
+Library Uri:    & \url{https://github.com/xanthospap/chaos-ngpt} \\
+Version:        & v0.1-0
+\end{tabular}
+\end{center}
+
+\begin{abstract}
+{\small 
+This document describes the ngpt Software package developed at Dionysos Satellite Observatory (DSO), of National Technical University
+of Athens (NTUA).
+}
+\end{abstract}
+
+\section{Satellite Systems}
+
+\subsection{General}
+The Satellite Systems included in the package, are all GNSS for which data can be extracted. Hence, 
+the basic reference for GNSS is the RINEX format. Different RINEX versions can handle various
+combinations of GNSS. As of version 3.02, 6 GNSS are considered.
+\begin{center}
+\begin{tabular}{l l l}
+\hline
+GNSS     & Identifier &  Rinex Versions\\
+\hline
+Gps      & 'G'                &  all\\
+Glonass  & 'R'                &  from v2.00\\
+Galileo  & 'E'                &  from v2.11\\
+Sbas     & 'S'                &  from v2.10\\
+BeiDou   & 'B' (in v3.01 'C') &  from v3.02 (in v3.01 as Compass)\\
+QZSS     & 'J'                &  from v3.02\\
+\end{tabular}
+\end{center}
+Satellite Systems have various attributes, that affect the observed quantities. Each GNSS,
+has:
+\begin{itemize}
+
+\item an \textbf{identifier} (e.g. GPS has 'G'). These are explicitely mentioned in each RINEX version.
+This identifier can be easil represented using a \texttt{char}.
+
+\alertwarningbox{COMPASS is a problem !! Must be careful when it is encountered in RINEX v3.01}
+
+\item a list of valid \textbf{(nominal) frequencies}. GPS has (now) 3 valid frequencies, L1, L2,
+and L5. These should be represented by something like a \texttt{dictionary}, holding pairs of
+indexes and values, i.e. carrier frequency in MHz (.e.g. for GPS { (1,1575.42), (2,1227.60), (5,1176.45) }).
+
+\alertwarningbox{These are nominal frequencies and not actual, because GLONASS frequencies
+are satellite-dependent, e.g. for carrier 1, the frequency is 1602.0 + k * 9/16,
+where 1602.0 is the nominal frequency for the 1st carrier band.}
+\end{itemize}
+
+\subsection{Source Code}
+The satellite systems could efficiently be represented by an enumerator. But:
+
+\alertwarningbox{what about the MIXED or UNKNOWN satellite system ? Should they be
+inluded?}
+
+\begin{lstlisting}
+enum class SATELLITE_SYSTEM : char {
+    GPS,
+    GLONASS,
+    SBAS,
+    GALILEO,
+    BDS,
+    QZSS,
+    MIXED /// Should this be used/declared ??
+};
+\end{lstlisting}
+
+The attributes for each satellite system, could be defined in a special \texttt{traits} class.
+It would be nice if all attributes could be accesible at compile time.
+\begin{lstlisting}
+/// Traits for Satellite Systems
+template<SATELLITE_SYSTEM S>
+struct SatelliteSystemTraits
+{ };
+
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /// Identifier
+    static constexpr char identifier { 'G' };
+
+    /// Return the nominal frequency, given a band
+    static double nominal_frequency(short int i)
+    {
+        switch ( i ) {
+            case (1) : return 1575.42e0;
+            case (2) : return 1227.60e0;
+            case (5) : return 1176.45e0;
+            default  : throw std::runtime_error
+            ("ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::"
+             "nominal_frequency -> Invalid Band !!");
+        }
+    }
+};
+\end{lstlisting}
+
+Or, if we want to specialize per frequency (per satellite system): 
+\begin{lstlisting}
+/// Traits for Satellite Systems
+template<SATELLITE_SYSTEM S>
+struct SatelliteSystemTraits
+{ };
+
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /// Identifier
+    static constexpr char identifier { 'G' };
+    
+    template<short int F>
+    class NominalFrequency {
+        /// Force failed compilation.
+        static_assert(sizeof(F) != sizeof(F), "Unspecialized Frequency !!"); 
+    };
+    template<>
+    class NominalFrequency<1> {
+        static constexpr double value { 1575.42e0 };
+    };
+    
+    /// Return the nominal frequency, given a band
+    static double nominal_frequency(short int i)
+    {
+        switch ( i ) {
+            case (1) : return NominalFrequency<1>::value;
+            case (2) : return NominalFrequency<2>::value;
+            case (5) : return NominalFrequency<5>::value;
+            default  : throw std::runtime_error
+            ("ngpt::SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::"
+             "nominal_frequency -> Invalid Band !!");
+        }
+    }
+};
+\end{lstlisting}
+
+\subsection{Pragmatic View}
+Most of the times (e.g. whre reading from data files), we won't know what satellite system
+we will encounter. Templates in these cases are not a big help.
+
+What we will definitely need, is function(s) to translate identifiers to satellite systems,
+e.g. 
+
+\begin{lstlisting}
+SATELLITE_SYSTEM charToSatelliteSystem(char c)
+{
+    switch ( c ) {
+        case (SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::identifier) :
+            return SATELLITE_SYSTEM::GPS;
+    /* ... more cases ... */
+    }
+}
+\end{lstlisting}
+
+Also, functions to check if a frequency (index) is valid for a satellite system, and
+return the value (MHz), e.g.
+
+\begin{lstlisting}
+bool SatelliteSystemHasFrequency(short int f,SATELLITE_SYSTEM s)
+{
+  switch ( s ) {
+    case (SATELLITE_SYSTEM::GPS) :
+      switch ( f ) {
+        case (1) :
+          return SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>::NominalFrequency<1>::value;
+        /* ...more bands... */
+      /* ...more satellite systems */
+    }
+  }
+}
+\end{lstlisting}
+
+Or maybe this is better ...
+\begin{lstlisting}
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /* ...various declerations... */
+    
+    static std::unordered_map<short int, double> frequencies
+    {
+        { 1, 1575.42e0 },
+        { 2, 1227.60e0 },
+        { 5, 1176.45e0 },
+    };
+    
+    static bool frequency_value(short int f,double &val)
+    {
+        auto v = frequencies.find(f);
+        if (v == frequencies.end() ) {
+            return false;
+        } else {
+            val = v.second;
+        }
+        return true;
+    }
+    
+    /* ...various declerations... */
+}
+\end{lstlisting}
+
+Keep in mind that forming observables, satellite systems and searching/forming frequencies
+are going to happen only seldom. Better to be clear and easily extendable.
+
+\section{Frequencies}
+
+Each satellite system uses certain frequency bands to emmit the signal.
+The bands are indexed with (unsigned short) indexes. The indexes correspond to
+frequency values. For example, for GPS band(1) = 1575.42e0MHz, band(2) = 1227.60e0MHz
+and band(5) = 1176.45e0MHz.
+
+\alertwarningbox{Again, note that GLONASS frequencies
+are satellite-dependent, e.g. for band(1), the frequency is 1602.0 + k * 9/16,
+where 1602.0 is the nominal frequency for the 1st carrier band.}
+
+Frequencies are easily represented by a \texttt{short int} or \texttt{short unsigned int}.
+
+Frequencies are satellite-system-dependent, so it would make sense to include them
+in the satallite system traits. E.g. as an assosiative array.
+
+\begin{lstlisting}
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /* ...various declerations... */
+    
+    static std::unordered_map<short int, double> frequencies
+    {
+        { 1, 1575.42e0 },
+        { 2, 1227.60e0 },
+        { 5, 1176.45e0 },
+    };
+    
+    /* ...various declerations... */
+}
+\end{lstlisting}
+
+Or, a more compile-time, \texttt{constexpr} way (see \url{http://stackoverflow.com/questions/8026906/constexpr-and-initialization})
+
+\begin{lstlisting}
+/// Specialize traits for Satellite System Gps
+template<>
+struct SatelliteSystemTraits<SATELLITE_SYSTEM::GPS>
+{
+    /* ...various declerations... */
+    
+    struct freq_pair {
+        short int idx;
+        double val;
+    };
+
+    constexpr freq_pair freq_map[] = {
+        { 1, 1575.42e0 },
+        { 2, 1227.60e0 },
+        { 5, 1176.45e0 }
+    };
+    
+    constexpr bool match(short int i,short int j) {
+        
+
+    /* ...various declerations... */
+}
+\end{lstlisting}
+
+\section{Observation Types}
+
+
+\section{Attributes}
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\bibliographystyle{apalike}
+
+\bibliography{sample}
+
+%----------------------------------------------------------------------------------------
+
+
+\end{document}
