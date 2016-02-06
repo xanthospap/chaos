@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Using color in SVG</title>
+                  <script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+                  <script src="//d3js.org/topojson.v1.min.js"></script>
+		<style type="text/css">
+			/* No style rules here yet */		
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+			
+			//Width and height
+                        var w = 900,
+                            h = 600;
+
+                        var projection = d3.geo.mercator();
+                        
+                        var svg = d3.select("body")
+                                    .append("svg")
+                                    .attr("width", w)
+                                    .attr("height", h);
+                        
+                        var path = d3.geo.path().projection(projection);
+
+                        var g = svg.append("g");
+                        d3.json("world.json", function(error, topology) {
+                            g.selectAll("path")
+                                .data(topojson.object(topology, topology.objects.countries)
+                                    .geometries)
+                            .enter()
+                            .append("path")
+                            .attr("d", path)
+                        });
+
+                        /*
+                        // Load dataset from csv.
+                        d3.csv("addneq.csv", function(error, data) {
+                            if (error) {
+                                console.log(error)
+                            } else {
+                                console.log(data);
+                                cvs_ds = data;
+                            }
+                            // Create svg in DOM
+                            var svg = d3.select("body")
+                                        .append("svg")
+                                        .attr("width", w)
+                                        .attr("height", h);
+                            // Herein, a series of ellipses 
+                            var ellipses = svg.selectAll("ellipse")
+                                             .data(data)
+                                             .enter()
+                                             .append("ellipse");
+                            // ... with data-defined attributes
+                            ellipses.attr("cx", function(d, i) {
+                                        return (i * 50) + 25;
+                                    })
+                                    .attr("cy", h/2)
+                                    .attr("rx", function(d) {
+                                        return d.lonrms * 10000;
+                                    })
+                                    .attr("ry", function(d) {
+                                        return d.latrms * 10000;
+                                    })
+                                    .attr("fill", "yellow")
+                                    .attr("stroke", "orange")
+                                    .attr("stroke-width", function(d) {
+                                        return d/2;
+                                    });
+                        });
+                        */
+
+		</script>
+	</body>
+</html>
