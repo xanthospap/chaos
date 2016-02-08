@@ -1,0 +1,5 @@
+downloadable .shp files can be hound e.g. here: http://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units
+## btw, nice tutorial here: http://www.maori.geek.nz/tips_tricks_and_tools_for_creating_and_working_with_maps_in_d3_js/
+trasnform .shp to GeoJason:
+	go to the NUTS_*/data dir
+	run ogr2ogr -f GeoJSON nuts_rg_10m_2013.json NUTS_RG_10M_2013.shp
