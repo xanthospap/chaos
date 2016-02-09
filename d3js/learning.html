@@ -49,7 +49,7 @@
                                           .ticks(2.5);
 
                         // Load dataset from csv.
-                        d3.csv("addneq.json", function(error, adn_data) {
+                        d3.csv("addneq.csv", function(error, adn_data) {
                             if (error) {
                                 console.log(error)
                             } else {
@@ -80,6 +80,7 @@
                                .call(xAxis);
 
                             // ... with data-defined attributes
+                            
                             ellipses.attr("cx", function(d, i) {
                                         return x_scale( d.lonest );
                                     })
@@ -102,6 +103,8 @@
                                     .attr("stroke-width", function(d) {
                                         return 2;
                                     });
+                            
+                            
                             svg.selectAll("text")
                                .data(adn_data)
                                .enter()
@@ -112,15 +115,45 @@
                                .attr("y", function(d) { return y_scale(d.latest) })
                                .attr("font-size", "11px")
                                .attr("fill", "black");
+                            
+                            svg.selectAll("polyline")
+                                .data(adn_data)
+                                .enter()
+                                .append("polyline")
+                                .attr("points", function(d) {
+                                    var p1 = [x_scale(d.lonest), y_scale(d.latest)];
+                                    var p2 = [x_scale(d.lonest) + 1000.0*d.east, y_scale(d.latest)];
+                                    var p3 = [x_scale(d.lonest), y_scale(d.latest)];
+                                    var p4 = [x_scale(d.lonest), y_scale(d.latest) + 1000.0*d.north];
+                                    console.log([p1, p2, p3, p4])
+                                    return p1 + " " + p2 + " " + p3 + " " + p4;
+                                })
+                                .attr("fill", "none")
+                                .attr("stroke", "black")
+                                .attr("stroke-width", "2");
+
+                            /*
                             svg.selectAll("line")
                                 .data(adn_data)
                                 .enter()
                                 .append("line")
                                 .attr("x1", function(d){ return x_scale(d.lonest);})
                                 .attr("y1", function(d){ return y_scale(d.latest);})
-                                .attr("x2", function(d){ return x_scale(d.lonest + d.east);})
-                                .attr("y2", function(d){ return x_scale(d.latest + d.north);})
-                                .attr("class", "corline")
+                                .attr("x2", function(d){ return x_scale(d.lonest) + 1000.0*d.east;})
+                                .attr("y2", function(d){ return y_scale(d.latest);})
+                                .attr("class", "corline");
+                            svg.selectAll("line")
+                                .data(adn_data)
+                                .enter()
+                                .append("line")
+                                .attr("x1", function(d){ return x_scale(d.lonest);})
+                                .attr("y1", function(d){ return y_scale(d.latest);})
+                                .attr("x2", function(d){ return x_scale(d.lonest);})
+                                .attr("y2", function(d){ return y_scale(d.latest) + 1000.0*d.north;})
+                                .attr("class", "corline");
+                            */
+
+
                         });
 		</script>
 	</body>
