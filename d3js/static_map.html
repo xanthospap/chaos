@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+
+</style>
+<body>
+<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+<!--<script src="//d3js.org/topojson.v1.min.js"></script>-->
+<script>
+d3.json("gshhs-geojson/merge.json", function(error, uk) {
+      if (error) return console.error(error);
+        console.log(uk);
+});
+</script>
