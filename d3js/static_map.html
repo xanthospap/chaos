@@ -19,7 +19,7 @@
   stroke: #fff;
   stroke-width: .5px;
 }
-//http://stackoverflow.com/questions/18165533/how-to-draw-a-line-link-between-two-points-on-a-d3-map-based-on-latitude-lon
+<!--http://stackoverflow.com/questions/18165533/how-to-draw-a-line-link-between-two-points-on-a-d3-map-based-on-latitude-lon-->
 </style>
 </head>
 <body>
@@ -51,33 +51,78 @@ var path = d3.geo.path()
 var graticule = d3.geo.graticule();
 
 var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+            .attr("width", width)
+            .attr("height", height);
 
 svg.append("path")
-    .datum(graticule)
-    .attr("class", "graticule")
-    .attr("d", path);
+   .datum(graticule)
+   .attr("class", "graticule")
+   .attr("d", path);
+
+// clipping ??
+poly = [{"x":-10.0, "y":70.0},
+        {"x":80.0,  "y":70.0},
+        {"x":80.0,  "y":20.0},
+        {"x":-10.0, "y":20.0}];
+
+svg.selectAll("clipPath")
+   .data([poly])
+   .enter()
+   .append("polygon")
+   .attr("id", "clip-poly")
+   .attr("fill-opacity", "0.5")
+   .attr("points",function(d) { 
+        return d.map(function(d) {
+            return projection([d.x,d.y]).join(",");
+        }).join(" ");
+    });
 
 // needed for zoom
 var g = svg.append("g");
-svg
-    .call(zoom)
-    .call(zoom.event);
+svg.call(zoom).call(zoom.event);
+
+var mapGroup = g.append('g');
+var arcGroup = g.append('g');
+var imageGroup = g.append('g');
+var pointGroup = g.append('g');
 
 d3.json("world-50m.json", function(error, world) {
   if (error) throw error;
 
-// for non-zoom this should be svg (not g.*)
-  g.insert("path", ".graticule")
-      .datum(topojson.feature(world, world.objects.land))
-      .attr("class", "land")
-      .attr("d", path);
+    // for non-zoom this should be svg (not g.*)
+    mapGroup.insert("path", ".graticule")
+            .datum(topojson.feature(world, world.objects.land))
+            .attr("class", "land")
+            .attr("d", path)
+            .attr("clip-path", "url(#clip-poly)"); // apply clip
 
-  g.insert("path", ".graticule")
-      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-      .attr("class", "boundary")
-      .attr("d", path);
+    mapGroup.insert("path", ".graticule")
+            .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+            .attr("class", "boundary")
+            .attr("d", path);
+
+    d3.json("dso_cgps.json", function(error, data) {
+        if (error) throw error;
+        console.log(data);
+        imageGroup.selectAll("image")
+                  .data(d3.entries(data))
+                  .enter()
+                  .append("circle")
+                  .attr("r", 10)
+                  .attr("cx", function(d) {
+                        console.log( d.value["longitude_east"]);
+                        console.log( projection([d.value["longitude_east"], d.value["latitude_north"]]) );
+                        return projection([d.value["longitude_east"], d.value["latitude_north"]])[0];
+                  })
+                  .attr("cy", function(d) {
+                        return projection([d.value["longitude_east"], d.value["latitude_north"]])[1];
+                  })
+                  .attr("stroke", "orange")
+                  .attr("fill", "red")
+                  .attr("clip-path", "url(#clip-poly)"); // apply clip
+    });
+                  
+
 });
 
 // needed for zoom
