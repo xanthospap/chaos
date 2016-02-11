@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body{
+  font-family: sans;
+  padding: 10px;
+}
+svg path{
+  stroke: #000;
+  stroke-width: 1px;
+  stroke: rgba(0,0,0,0.2);
+}
+svg{
+  border: 1px solid #DED8BF;
+  background-color: #f4f4d9;
+  width: 700px;
+  height: 400px;
+}
+h1{
+  font-weight: normal;
+  margin: 0;
+  padding-left: 5px;
+  color: #53483e;
+}
+p{
+  margin: 0;
+  margin-bottom: 10px;
+  padding-left: 5px;
+  color: #917e6b;
+}
+ul{
+  width: 200px;
+  float: left;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  padding-right: 10px;
+}
+li{
+  cursor: pointer;
+  background-color: #c8ad93;
+  padding: 10px;
+  margin: 2px;
+  color: #fff;
+}
+</style>
+</head>
+<body>
+  <h1>D3.js Surface Plots</h1>
+  <p>Drag graph to change view</p>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="surface3d.js"></script>
+  <script>
+  var yaw=0.5,pitch=0.5, width=700, height=500, drag=false;
+  var hpad=50, wpad=50;
+
+/*
+  var ul=d3.select('body')
+           .append('ul');
+*/
+
+  var svg=d3.select('body')
+            .append('svg')
+            .attr('height',height)
+            .attr('width',width);
+
+  var group = svg.append("g");
+
+  var svg2=d3.select('body')
+            .append('svg')
+            .attr('height',height)
+            .attr('width',width);
+ /* var scaleGroup = svg2.append("g");*/
+
+/*
+  ul.selectAll('li')
+    .data(surfaces)
+      .enter().append('li')
+        .html(function(d){
+          return d.name
+        }).on('mousedown',function(){
+          md.data([d3.select(this).datum().data]).surface3D()
+            .transition().duration(500)
+            .surfaceHeight(function(d){
+              return d;
+            }).surfaceColor(function(d){
+              var c=d3.hsl((d+100), 0.6, 0.5).rgb();
+              return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
+            });
+        });
+*/
+
+// a scale to map pcv values to rgb (actually only r).
+var domain = [-2.0, 2.0];
+var range  = [0, 255];
+var pcvScale = d3.scale.linear()
+                       .domain(domain)
+                       .range(range);
+/*
+var scale_z = []
+for (var x=domain[0]; x<=domain[1]; x+=0.5) {
+    scale_z.push( [x] );
+};
+*/
+
+d3.json("antex.json", function(error, antex) {
+  if (error) throw error;
+  //console.log([antex.pcv_values]);
+
+  var md=group.data([antex.pcv_values])
+              .surface3D(width-2*wpad,height-2*hpad)
+              .surfaceHeight(function(d){
+                   return d*100;
+              })
+              .surfaceColor(function(d){
+                  var c=d3.hsl(pcvScale(d), 0.6, 0.5).rgb();
+                  //console.log(d, c);
+                  return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
+              });
+
+svg2.append("text")
+    .attr("x", "100")
+    .attr("y", "100")
+    .text( function (d) {
+        var at = antex.master_antenna;
+        /*[
+        ["Antex         : " + antex.antex],
+        ["Antenna       : " + antex.master_antenna],
+        ["Zenith Range  : " + antex.zenith_range[0] + "/" + antex.zenith_range[1] + "/" + antex.zenith_range[2]],
+        ["Azimouth Range: " + antex.azimouth_range[0] + "/" + antex.azimouth_range[1] + "/" + antex.azimouth_range[2]]
+        ];*/
+        return at /*.join("\r\n")*/;
+    } )
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "20px")
+    .attr("fill", "black")
+
+
+var scale_zz = [ [-2], [-1], [0], [1], [2], [3], [4], [5], [6], [7] ];
+svg2.append("g").data([scale_zz])
+            .surface3D(width,height)
+            .surfaceHeight(function(d){ return d*10; })
+            .surfaceColor(function(d){
+                console.log("motherfucker");
+                var c=d3.hsl(pcvScale(d), 0.6, 0.5).rgb();
+                console.log("motherfucker");
+                return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
+            });
+  
+  svg.on("mousedown",function(){
+    drag=[d3.mouse(this),yaw,pitch];
+  }).on("mouseup",function(){
+    drag=false;
+  }).on("mousemove",function(){
+    if(drag){            
+      var mouse=d3.mouse(this);
+      yaw=drag[1]-(mouse[0]-drag[0][0])/50;
+      pitch=drag[2]+(mouse[1]-drag[0][1])/50;
+      pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,pitch));
+      md.turntable(yaw,pitch);
+    }
+  });
+
+});
+  
+  </script>
+</body>
+</html>
