@@ -65,17 +65,18 @@ poly = [{"x":-10.0, "y":70.0},
         {"x":80.0,  "y":20.0},
         {"x":-10.0, "y":20.0}];
 
+  /*
 svg.selectAll("clipPath")
    .data([poly])
    .enter()
    .append("polygon")
    .attr("id", "clip-poly")
    .attr("fill-opacity", "0.5")
-   .attr("points",function(d) { 
+   .attr("points",function(d) {
         return d.map(function(d) {
             return projection([d.x,d.y]).join(",");
         }).join(" ");
-    });
+    });*/
 
 // needed for zoom
 var g = svg.append("g");
@@ -118,10 +119,10 @@ d3.json("world-50m.json", function(error, world) {
                         return projection([d.value["longitude_east"], d.value["latitude_north"]])[1];
                   })
                   .attr("stroke", "orange")
-                  .attr("fill", "red")
-                  .attr("clip-path", "url(#clip-poly)"); // apply clip
+                  .attr("fill", "red");
+                  //.attr("clip-path", "url(#clip-poly)"); // apply clip
     });
-                  
+
 
 });
 
@@ -137,6 +138,6 @@ function zoomed() {
 
 d3.select(self.frameElement).style("height", height + "px");
 
-</script>	
+</script>
 </body>
 </html>

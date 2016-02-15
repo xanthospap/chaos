@@ -53,7 +53,7 @@ li{
   <script src="http://d3js.org/d3.v3.min.js"></script>
   <script src="surface3d.js"></script>
   <script>
-  var yaw=0.5,pitch=0.5, width=700, height=500, drag=false;
+  var yaw=0.5,pitch=0.5, width=700, height=600, drag=false;
   var hpad=50, wpad=50;
 
   var svg=d3.select('body')
@@ -73,18 +73,18 @@ var pcvScale = d3.scale.linear()
 var zenScale = d3.scale.linear().domain([0,90]).range([0,90]);
 var zenAxis  = d3.svg.axis().scale(zenScale).orient("bottom").ticks(5);
 
-d3.json("antex.json", function(error, antex) {
+d3.json("leiatx.json", function(error, antex) {
   if (error) throw error;
 
   console.log("++ constructing Surface");
   var md=group.data([antex.pcv_values])
               .surface3D(width,height)
               .surfaceHeight(function(d){
+                  console.log("got height:",d);
                    return d*100;
               })
               .surfaceColor(function(d){
                   var c=d3.hsl(pcvScale(d), 0.6, 0.5).rgb();
-                  //console.log(d, c);
                   return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
               });
   console.log("++ all done!");
