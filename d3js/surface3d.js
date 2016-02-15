@@ -80,20 +80,50 @@
       var ylength=data[0].length;
       var d0=[];
       var idx=0;
+      //console.log("data has type: ", data);
+      var max_x = -5000000, max_y = -5000000, max_d = -5000000;
+      var min_x =  5000000, min_y =  5000000, min_d =  5000000;
       for(var x=0;x<xlength-1;x++){
         for(var y=0;y<ylength-1;y++){
           var depth=data[x][y][2]+data[x+1][y][2]+data[x+1][y+1][2]+data[x][y+1][2];
+          if ( depth > max_d ) {
+              max_d = depth;
+          } else if ( depth < min_d ) {
+              min_d = depth;
+          }
+          var mx  = (data[x][y][0]+displayWidth/2).toFixed(10);
+          var my  = (data[x][y][1]+displayHeight/2).toFixed(10);
+          var l1x = (data[x+1][y][0]+displayWidth/2).toFixed(10);
+          var l1y = (data[x+1][y][1]+displayHeight/2).toFixed(10);
+          var l2x = (data[x+1][y+1][0]+displayWidth/2).toFixed(10);
+          var l2y = (data[x+1][y+1][1]+displayHeight/2).toFixed(10);
+          var l3x = (data[x][y+1][0]+displayWidth/2).toFixed(10);
+          var l3y = (data[x][y+1][1]+displayHeight/2).toFixed(10);
+          if ( max_x < Math.max(mx, l1x, l2x, l3x) ) {
+              max_x = Math.max(mx, l1x, l2x, l3x);
+          }
+          if ( min_x > Math.min(mx, l1x, l2x, l3x) ) {
+              min_x = Math.min(mx, l1x, l2x, l3x);
+          }
+          if ( max_y < Math.max(my, l1y, l2y, l3y) ) {
+              max_y = Math.max(my, l1y, l2y, l3y);
+          }
+          if ( min_y > Math.min(my, l1y, l2y, l3y) ) {
+              min_y = Math.min(my, l1y, l2y, l3y);
+          }
           d0.push({
             path:
-              'M'+(data[x][y][0]+displayWidth/2).toFixed(10)+','+(data[x][y][1]+displayHeight/2).toFixed(10)+
-              'L'+(data[x+1][y][0]+displayWidth/2).toFixed(10)+','+(data[x+1][y][1]+displayHeight/2).toFixed(10)+
-              'L'+(data[x+1][y+1][0]+displayWidth/2).toFixed(10)+','+(data[x+1][y+1][1]+displayHeight/2).toFixed(10)+
-              'L'+(data[x][y+1][0]+displayWidth/2).toFixed(10)+','+(data[x][y+1][1]+displayHeight/2).toFixed(10)+
-              'Z', depth: depth, data: originalData[x][y]
+              'M'+ mx  +',' + my  +
+              'L'+ l1x +',' + l1y +
+              'L'+ l2x +',' + l2y +
+              'L'+ l3x +',' + l3y +
+              'Z', depth: depth, data: originalData[x][y], ptxy: [mx,my,l1x,l1y,l2x,l2y,l3x,l3y]
           });
         }
       }
+      var d1 = d0.slice(0);
       d0.sort(function(a, b){return b.depth-a.depth});
+      var dlength = d0.length;
       var dr=node.selectAll('path').data(d0);
       dr.enter().append("path");
       if(trans){
@@ -103,17 +133,24 @@
       if(colorFunction){
         dr.attr("fill",function(d){return colorFunction(d.data)});
       }
-      var zen_axis = []
-      for (var i=0;i<=90;i+=10) {
-        zen_axis.push(t=[]);
-        t.push(0);
-      }
-      var zenAxisData=getTransformedData(zen_axis);
+
+      var d1s = d1.length;
+      console.log("d0 is:",d0);
+      console.log("d1 is:",d1,d1s);
+      //dr.enter().append("circle").attr("cx",d1[0].ptxy[0]).attr("cy",d1[0].ptxy[1]).attr("r","20");
+      //dr.enter().append("circle").attr("cx",d1[d1s-1].ptxy[0]).attr("cy",d1[d1s-1].ptxy[1]).attr("r","5");
+      //dr.enter().append("circle").attr("cx",d1[d1s-1].ptxy[2]).attr("cy",d1[d1s-1].ptxy[3]).attr("r","10");
+      //dr.enter().append("circle").attr("cx",d1[d1s-1].ptxy[4]).attr("cy",d1[d1s-1].ptxy[5]).attr("r","15");
+      //dr.enter().append("circle").attr("cx",d1[d1s-1].ptxy[6]).attr("cy",d1[d1s-1].ptxy[7]).attr("r","20");
+      //dr.enter().append("circle").attr("cx",d1[11].ptxy[0]).attr("cy",d1[11].ptxy[1]).attr("r","5");
+      //dr.enter().append("circle").attr("cx",d1[11].ptxy[2]).attr("cy",d1[11].ptxy[3]).attr("r","10");
+      //dr.enter().append("circle").attr("cx",d1[11].ptxy[4]).attr("cy",d1[11].ptxy[5]).attr("r","15");
+      //dr.enter().append("circle").attr("cx",d1[11].ptxy[6]).attr("cy",d1[11].ptxy[7]).attr("r","20");
       dr.enter().append("line")
-                .attr("x1",(zenAxisData[x][y][0]+displayWidth/2).toFixed(10))
-                .attr("y1",(zenAxisData[x][y][1]+displayWidth/2).toFixed(10))
-                .attr("x2",0)
-                .attr("y2","0")
+                .attr("x1",d1[0].ptxy[0])
+                .attr("y1",d1[0].ptxy[1])
+                .attr("x2",d1[11].ptxy[6])
+                .attr("y2",d1[11].ptxy[7])
                 .attr("style","stroke:rgb(0,0,0);stroke-width:2");
       console.log("exiting surface::renderSurface");
       trans=false;
