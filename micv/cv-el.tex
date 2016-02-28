@@ -1,0 +1,374 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[a4paper,10pt]{article} % Default font size and paper size
+
+\usepackage[top=2cm, bottom=1.5cm, left=1.7cm, right=1.7cm]{geometry}
+\usepackage{marvosym}
+\usepackage{fontspec} %for loading fonts
+\usepackage{xunicode,xltxtra,url,parskip} %other packages for formatting
+\RequirePackage{color,graphicx}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{longtable}
+\usepackage[monogreek]{xgreek}
+\usepackage{titlesec} %custom \section
+%Setup hyperref package, and colours for links
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\pagestyle{fancy}
+\definecolor{linkcolour}{rgb}{0,0.2,0.6}
+\hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}
+\defaultfontfeatures{Mapping=tex-text}
+%http://www.greekfontsociety.gr/pages/en_typefaces20th.html
+\setmainfont[Mapping=tex-text,Numbers=OldStyle]{GFS Artemisia}
+
+\titleformat{\section}{\Large\scshape\raggedright}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{2pt}{2pt}
+\titleformat{\subsection}{\large\scshape\raggedleft}{}{0em}{}[\titleline{\color{blue}\titlerule[0.5pt]}]
+\titlespacing{\subsection}{0pt}{1.5pt}{1.5pt}
+
+\fancyhf{}\renewcommand{\headrulewidth}{0pt}
+\lfoot{\footnotesize\textit{Ξ. Παπανικολάου}}
+\cfoot{\footnotesize\textit{Βιογραφικό Σημείωμα}}
+\rfoot{\thepage \footnotesize\textit{/} \pageref{LastPage}}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+%\pagestyle{empty} % Removes page numbering
+%\font\fb=''[cmr10]'' % Change the font of the \LaTeX command under the skills section
+
+%----------------------------------------------------------------------------------------
+%	NAME AND CONTACT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\par{\centering{\Huge \textsc{Ξάνθος} \textsc{Παπανικολάου}}\bigskip\par} % Your name
+
+\section{Προσωπικά Στοιχεία}
+
+\begin{tabular}{rl}
+  \textsc{Τόπος και ημερομηνία γέννησης:} & Λάρισα | 03 Σεπτεμβρίου 1984\\
+  \textsc{Στοιχεία Επικοινωνίας:} \\
+  & \textsc{\href{http://www.ntua.gr/}{Εθνικό Μετσόβιο Πολυτεχνείο}} \\
+  & \href{http://www.survey.ntua.gr/}{Σχολή Αγρονόμων και Τοπογράφων Μηχανικών}, Τομέας Τοπογραφίας\\
+  & Κέντρο Δορυφόρων Διονύσου, Εργαστήριο Ανώτερης Γεωδαισίας \\
+  \textsc{Διεύθυνση:} & Ηρώων Πολυτεχνείου 9, 15780 Ζωγράφος, Αθήνα \\
+  \textsc{Τηλέφωνο:} & +30 210772592\\
+  \textsc{email:} & \href{mailto:xanthos@mail.ntua.gr}{xanthos@mail.ntua.gr}
+\end{tabular}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	EDUCATION
+%----------------------------------------------------------------------------------------
+\section{Εκπαίδευση}
+\begin{tabular}{rp{13cm}}
+
+  \textsc{2010-σήμερα} &\textbf{Υποψήφιος Διδάκτορας στη Σχολή Αγρονόμων και Τοπογράφων Μηχανικών Ε.Μ.Π.}\\
+   & Πεδίο: \textit{Επεξεργασία GNSS Δεδομένων για Μελέτη Παραμορφώσεων του Γήινου Φλοιού}\\
+   & \small Επιβλέπων: Καθ. Χριστιάνα \textsc{Μητσακάκη}\\
+
+  \textsc{Ιούνιος 2010} & \textbf{IAG School on References Frames}\\
+    & International Association of Geodesy \small{(IAG)}, Aegean University, Mytilene, Lesvos, Greece June 7-12, 2010\\
+
+  \textsc{2002-2009} & \textbf{Σχολή Αγρονόμων και Τοπογράφων Μηχανικών Ε.Μ.Π.}\\
+  & Διπλωματική εργασία: 
+  \textit{Διερεύνηση μεθόδων συνόρθωσης μεγάλων δικτύων GPS για την παρακολούθηση μετακινήσεων - εφαρμογή στην Εύβοια}\\
+
+\end{tabular}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	LANGUAGES
+%----------------------------------------------------------------------------------------
+\section{Γλώσσες}
+\begin{tabular}{rp{13cm}}
+
+\textsc{Αγγλικά} & Certificate of Proficiency in English, University of Michigan \\
+\textsc{Γερμανικά} & Zertifikat Mittelstufe, Goethe Institut\\
+
+\end{tabular}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	TEACHING
+%----------------------------------------------------------------------------------------
+\section{Εκπαιδευτική \& Διδακτική Εμπειρία}
+
+Στη Σχολή Αγρονόμων και Τοπογράφων Μηχανικών του Ε.Μ Πολυτεχνείου :
+
+\begin{longtable}{rl}
+
+\textsc{2010-σήμερα} & 
+  Γεωδαισία IV (Δορυφορική Γεωδαισία, 6\textsuperscript{ο} εξάμηνο)\\
+  & Γεωδαισία V (Ανώτερη Γεωδαισία, 5\textsuperscript{ο} Εξάμηνο)\\
+  & Μεγάλες Ασκήσεις Ανώτερης και Δορυφορικής Γεωδαισίας (8\textsuperscript{ο} εξάμηνο)\\
+  & Μεγάλες Ασκήσεις Γεωδαισίας (4\textsuperscript{ο} εξάμηνο)\\
+  & Εφαρμογές Ανώτερης και Δορυφορικής Γεωδαισίας (9\textsuperscript{ο} εξάμηνο)\\
+&\\
+
+\textsc{2010-σήμερα} & 
+  Συμμετοχή στην επίβλεψη διπλωματικών εργασιών (πάνω από 7)\\
+&\\
+
+\textsc{2010-2012} & 
+  Θεωρία Σφαλμάτων και Συνορθώσεις Ι (5\textsuperscript{ο} Εξάμηνο)\\
+  & Θεωρία Σφαλμάτων και Συνορθώσεις ΙΙ (8\textsuperscript{ο} Εξάμηνο)\\
+&\\
+
+\end{longtable}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	COMPUTER SKILLS
+%----------------------------------------------------------------------------------------
+\section{Γνώσεις Η/Υ}
+
+\begin{longtable}{r|p{13cm}}
+
+\multicolumn{2}{c}{} \\
+  \textsc{Λειτουργικά Συστήματα} 
+  & GNU/Linux (user/administrator)\\
+  & UNIX/\href{https://www.freebsd.org/}{FreeBSD} (user/administrator)\\
+  & Windows XP\textregistered , Windows 7\textregistered \\
+
+\multicolumn{2}{c}{} \\
+  \textsc{Γλώσσες Προγραμματισμού}
+  & άριστη γνώση C/C++\\
+  & πολύ καλή γνώση MATLAB\textregistered, \href{https://www.gnu.org/software/octave/}{GNU/Octave}\\
+  & πολύ καλή γνώση \href{http://www.python.org/}{Python}, 
+    shell scripting\href{http://tiswww.case.edu/php/chet/bash/bashtop.html}{(bash)}, 
+    htlm, javascript\\
+  & πολύ καλή γνώση \href{http://www.mysql.com/}{MySQL}\texttrademark\\
+
+\multicolumn{2}{c}{} \\
+  \textsc{Λογισμικά Πακέτα} 
+   & \href{http://www.qgis.org/en/site/}{QGIS}, 
+   \href{http://gmt.soest.hawaii.edu/}{Generic Mapping Tools},
+   \href{http://www.latex-project.org/}{\LaTeX},
+   \href{http://git-scm.com/}{git}\\
+
+\multicolumn{2}{c}{} \\
+  \textsc{Επεξεργασία GNSS:} & 
+  \textsc{\href{http://www.bernese.unibe.ch/}{Bernese GNSS Software}}\\
+    & Γνώση πολλών εμπορικών πακέτων επεξεργασίας GNSS δεδομένων\\
+
+\end{longtable}
+\medskip
+
+%----------------------------------------------------------------------------------------
+% MEMBERSHIP OF SCIENTIFIC ORGANIZATIONS
+%----------------------------------------------------------------------------------------
+\section{Μέλος Επιστημονικών Φορέων}
+\begin{longtable}{rp{13cm}}
+\textsc{2009 - σήμερα} & Τεχνικό Επιμελητήριο Ελλάδας \href{http://web.tee.gr/}{(ΤΕΕ)}\\
+\textsc{2009 - σήμερα} & Πανελλήνιος σύλλογος Διπλωματούχων Αγρονόμων και Τοπογράφων Μηχανικών \href{http://www.psdatm.gr/}{(ΠΣΔΑΤΜ)}\\
+\end{longtable}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	WORK EXPERIENCE 
+%----------------------------------------------------------------------------------------
+
+\section{Εργασιακή Εμπειρία}
+
+\begin{longtable}{r|p{13cm}}
+
+%\emph{Current} & 1\textsuperscript{st} year Analyst at \textsc{Lehman Brothers}, London \\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2010-σήμερα} & ως ελεύθερος επαγγελματίας έχω απασχοληθεί με :\\ 
+  & - τοπογραφικές αποτυπώσεις, εργασίες πεδίου και γραφείου \\
+  & - σχεδιασμό και επίλυση μετρήσεων στατικού και κινηματικού εντοπισμού GPS\\
+  & - έλεγχο και συντήρηση μόνιμων γεωδαιτικών δικτύων GPS\\
+  & - παροχή επικουρικού διδακτικού έργου στην σχολή ΑΤΜ του Ε.Μ.Π. \\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2014-2015} & \textbf{\textsc{SEISMO}}\\
+  & \textit{South Aegean Geodynamic And Tsunami Monitoring Platform.}\\
+  & Συμμετοχή στην ανάπτυξη γεωχωρικής βάσης δεδομένων· ανάπτυξη και διαχείρηση μέσω διαδικτυακής πλατφόρμας (MySQL,\href{http://www.unavco.org/software/data-management/gsac/gsac.html}{GSAC});
+    επεξεργασία και ανάλυση δορυφορικών γεωδαιτικών δεδομένων· ανάλυση χρονοσειρών (GNSS, tide-gauges); \\
+  & Χρηματοδοτήθηκε από \href{http://www.espa.gr/en/Pages/Default.aspx}{NSRF} και \href{http://www.gsrt.gr/central.aspx?sId=119I428I1089I323I488743}{GSRT}.\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2012-σήμερα} & \textbf{\textsc{Seismo Fear Hellarc}}\\
+  & \textit{Integrated understanding of SEISmicity, using innovative MethOdologies of Fracture mechanics along with EARthquake and non extensive statistical physics – Application to the geodynamic system of the HELLenic ARC.}\\
+  & Συμμετοχή στην επίλυση δεδομένων μόνιμων σταθμών GPS και στην ανάλυση των χρονοσειρών.\\
+  & Χρηματοδοτήθηκε στα πλαίσια του έργου "ΘΑΛΗΣ"\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\ 
+\textsc{2012-σήμερα} & \textsc{\textbf{LAVMO - Landslide Vulnerability Model}}\\
+  & \textit{Ανάπτυξη Μοντέλου Επικινδυνότητας Κατολισθήσεων με χρήση μεθόδων Τηλεπισκόπισης και Συμβολομετρίας.}\\
+  & Συμμετοχή στο ΠΕ3: Δορυφορική γεωδαισία.\\
+  & Χρηματοδοτήθηκε στα πλαίσια του έργου "ΘΑΛΗΣ"\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2012-σήμερα} & \textbf{\textsc{ΤΕΙ Αθήνας}}\\
+  & \textit{Αξιολόγηση υψομετρικής πληροφορίας χωροσταθμικού και τριγωνομετρικού δικτύου της Ελλάδας στο πλαίσιο της ενοποίησης των Ευρωπαϊκών συστημάτων αναφοράς και ελέγχου: Εφαρμογή στους Νομούς Αττικής και Θεσσαλονίκης.}\\
+  & Συμμετοχή στις μετρήσεις υπαίθρου και στην επεξεργασία δεδομένων GPS\\
+  & Αρχιμήδης ΙΙΙ – Ενίσχυση ερευνητικών ομάδων στο ΤΕΙ Αθήνας.\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2012-σήμερα} & \textbf{\textsc{Σχολή Αγρονόμων \& Τοπογράφων Μηχ. Ε.Μ.Π.}}\\
+  & Συμμετοχή στο σχεδιασμό και στην ανάπτυξη της ιστοσελίδας των εργαστηρίων Ανώτερης Γεωδαισίας – Κέντρου Δορυφόρων Διονύσου.\\
+  & \url{http://dionysos.survey.ntua.gr}\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2012-2013} & \textbf{\textsc{\href{http://www.treecomp.gr/}{Tree Company CO}}}\\
+  & Επίλυση και επεξεργασία του δικτύου μόνιμων σταθμών GNSS URANUS της εταιρείας Tree Company CO.\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2011-2013} & \textbf{\textsc{Σχολή Αγρονόμων \& Τοπογράφων Μηχ. Ε.Μ.Π.}}\\
+  & Μερική απασχόληση στο \href{http://portal.survey.ntua.gr/main/geocenter/geocen-g.html}{Κέντρο Γεωπληροφορικής} της Σχολής Αγρονόμων και Τοπογράφων Μηχανικών του Ε.Μ.Π.\\
+
+% ---------------- %
+\multicolumn{2}{c}{} \\
+\textsc{2011-2012} & \textbf{\textsc{\href{http://www.oasp.gr/}{Οργανισμός Αντισεισμικού Σχεδιασμού και Προστασίας}}}\\
+  & Επεξεργασία μετρήσεων GPS και ανάλυση αποτελεσμάτων στην περιοχή της Σαντορίνης στο πλαίσιο των δραστηριοτήτων της Ειδικής Επιστημονικής Επιτροπής Παρακολούθησης του Ηφαιστείου της Σαντορίνης.\\
+
+% ---------------- %
+\multicolumn{2}{c}{}\\
+\textsc{2010-2012} & \textbf{\textsc{\href{http://www.landslides.gr/index.php?lang=el}{Περιφέρεια Πελοποννήσου ΕΟΧ}}}\\
+  & \textit{Ανάπτυξη συστήματος παρακολούθησης της αστάθειας κλιτύων για την πρόληψη κατολισθήσεων και εκπαίδευση των τοπικών δημοσίων αρχών στην Περιφέρεια Πελοποννήσου (Κωδικός ΕΟΧ: EL0071).}\\
+  & Συμμετοχή στις εργασίες υπαίθρου για μετρήσεις GPS και επίλυση των μετρήσεων.\\
+  & Χρηματοδοτήθηκε από τον ΕΟΧ και το Πρόγραμμα Δημοσίων Επενδύσεων.\\
+
+% ---------------- %
+\multicolumn{2}{c}{}\\
+\textsc{2010} & \textbf{\textsc{EGNOS performance in South latitudes, ΓΕΩΤΟΠΟΣ Α.Ε.}}\\
+  & Συμμετοχή στις εργασίες υπαίθρου για μετρήσεις GPS\\
+
+\end{longtable}
+\medskip
+
+%----------------------------------------------------------------------------------------
+%	PUBLICATIONS
+%----------------------------------------------------------------------------------------
+\section{Κατάλογος Δημοσιεύσεων}
+\medskip
+
+\subsection*{Άρθρα σε Περιοδικά και Τιμητικούς Τόμους}
+
+%\begin{longtable}
+\begin{longtable}{r|p{14cm}}
+\multicolumn{2}{c}{} \\
+  \textsc{2015}
+  & From quiescence to unrest : 20 years of satellite geodetic measurements at Santorini volcano, Greece,
+  \emph{Parks MM, Moore JDP, Papanikolaou X, Biggs J, Mather TA, Pyle DM, Raptakis C, Paradissis D, Hooper A, Parsons B, and Nomikou, P},
+  Journal of Geophysical Research: Solid Earth, Vol. 120, No. 2, 01.01.2015, p. 1309-1328,
+  \href{http://dx.doi.org/10.1002/2014JB011540}{http://dx.doi.org/10.1002/2014JB011540}.
+
+\multicolumn{2}{c}{} \\
+  \textsc{2013}
+  & Ανάπτυξη συστήματος παρακολούθησης της αστάθειας κλιτύων για την πρόληψη των κατολισθήσεων: προκεταρκτικά αποτελέσματα.,
+  \emph{Δρακάτος Γ., Παραδείσης Δ., Αναστασίου Δ., Ηλίας Π., Μαρίνου Α., Χουσιανίτης Κ., Παπανικολάου Ξ., Ζαχαρής Ε., Αργυράκης Π., Παπαζήση Κ., Μήλας Π.,}
+  τιμητικός τόμος προς τιμήν του Δ. Βλάχου, Ομότιμου Καθηγητή του Αριστοτελείου Πανεπιστημίου Θεσσαλονίκης, 2013\\
+
+  &\\
+
+  & Joint approach using satellite techniques for slope instability detection and monitoring,
+  \emph{Drakatos G., Paradissis P., Anastasiou D., Elias P., Marinou A., Chousianitis K., Papanikolaou X., Zacharis V., Argyrakis P.,Papazissi K. and Makropoulos K.},
+  International Journal of Remote Sensing, 34:6, 1879-1892, \href{http://www.tandfonline.com/doi/abs/10.1080/2150704X.2012.731089#.Uxni9meIaig}{doi:10.1080/2150704X.2012.731089}\\
+
+\multicolumn{2}{c}{} \\ 
+  \textsc{2012}
+  & Mapping inflation at Santorini volcano, Greece, using GPS and InSAR,
+  \emph{Papoutsis, I., X. Papanikolaou, M. Floyd, K. H. Ji, C. Kontoes, D. Paradissis, and V. Zacharis,}
+  Geophys. Res. Lett., \href{http://www.agu.org/pubs/crossref/pip/2012GL054137.shtml}{doi:10.1029/2012GL054137}, 2012\\
+
+  &\\
+
+  & Evolution of Santorini Volcano dominated by episodic and rapid fluxes of melt from depth,
+  \emph{M. M. Parks, J. Biggs, P. England, T. A. Mather, P. Nomikou, K. Palamartchouk, X. Papanikolaou, D. Paradissis, B. Parsons, D. M. Pyle, C. Raptakis and V. Zacharis},
+  Nature Geoscience (Advance Online Publication), 2012, \href{http://www.nature.com/ngeo/journal/v5/n10/full/ngeo1562.html}{doi:10.1038/ngeo1562}, 2012\\
+
+\multicolumn{2}{c}{} \\ 
+  \textsc{2010}
+  & Deformation studies in the Gulf of Patras, Western Greece,
+  \emph{Papazissi K., Anastasiou D., Marinou A., Mitsakaki C., Papanikolaou X., Paradissis D.}, 
+  Honorary Volume in honor of D.Arabelo, Professor of the Aristotle University of Thessaloniki, 2010\\
+\end{longtable}
+
+\subsection*{Ανακοινώσεις σε Συνέδρια}
+
+\begin{longtable}{r|p{14cm}}
+\multicolumn{2}{c}{} \\ 
+  \textsc{2013}
+  & The Santorini Inflation Episode, Monitored by InSAR and GPS,
+  \emph{Papoutsis I., Papanikolaou X., Floyd M., Ji K.H., Kontoes C., Paradissis D., Anastasiou D., and Ganas A.},
+  European Space Agency Living Planet Symposium, Sept. 2013, Edinburgh, UK.\\
+
+  &\\
+
+  & The Santorini inflation episode: from start to finish.,
+  \emph{Papoutsis I., Papanikolaou X., Floyd M., Ji K.H., Kontoes C., Paradissis D., Anastasiou D., and Ganas A.},
+  European Geosciences Union General Assembly, April 2013, Vienna, Austria.\\
+
+\multicolumn{2}{c}{} \\
+  \textsc{2012}
+  & Monitoring slope instability using a combined GPS and InSAR approach,
+  \emph{Drakatos G., Paradissis D., D. Anastasiou D., Elias P., Marinou A., Chousianitis K., Papanikolaou X., Zacharis V., Argyrakis P., Papazisi K. and Makropoulos K.},
+  33\textsuperscript{rd} General Assembly, European Seismological Commission, Augoust 19-24, 2012, Moscow, Russia.\\
+
+  &\\
+
+  & Development of a monitoring platform for slope instability and sliding prevention : preliminary results,
+  \emph{Drakatos G., Paradissis D., D. Anastasiou D., Elias P., Marinou A., Chousianitis K., Papanikolaou X., Zacharis V., Argyrakis P., Papazisi K. and MakropoulosK.},
+  EGU General Assembly 2012, Geophysical Research Abstracts ,Vol. 14, EGU2012-2609.\\
+
+\multicolumn{2}{c}{} \\
+  \textsc{2011}
+  & Estimating of tectonic velocities in the Ionian region, 
+  \emph{Marinou Α., Papanikolaou X., Paradissis D., Anastasiou D., Zacharis V., Tzavaras P., Papazissi K., and Mitsakaki C.},
+  EGU General Assembly 2011 , Geophysical Research Abstracts ,Vol. 13, EGU2011-12464.\\
+
+\multicolumn{2}{c}{} \\
+  \textsc{2010}
+  & Crustal Deformation in the Patras Gulf, Greece, from GPS Data Analysis,
+  \emph{Anastasiou D., Marinou A., Mitsakaki C., Papazissi K., Papanikolaou X., Paradissis D.},
+  15th General Assembly of Wegener, Istanbul, Turkey, 14 – 17 September 2010.\\
+
+  &\\
+
+  & An Automated Processing Scheme Designed for All Available Permanent GPS Stations in Greece,
+  \emph{Papanikolaou X., Marinou A., Mitsakaki C., Papazissi K., Paradissis D., Zacharis V., Anastasiou D.},
+  15th General Assembly of Wegener, Istanbul, Turkey, 14 – 17 September 2010.\\
+
+  &\\
+
+  & Deformation Studies in the Kaparelli Area, Central Greece,
+  \emph{Marinou A., Ganas A., Papanikolaou X., Bosy J., Papazissi K., Anastasiou D., Paradissis D., Drakatos G., Kontny B., Cacon S., Papanikolaou M.},
+  15th General Assembly of Wegener, Istanbul, Turkey, 14 – 17 September 2010.\\
+\end{longtable}
+
+\subsection*{Παρουσιάσεις σε Ημερίδες}
+
+\begin{longtable}{r|p{14cm}}
+\multicolumn{2}{c}{} \\
+  \textsc{2012}
+  & Evaluation of Santorini's recent activity via a comparison of space and terrestrial geodetic techniques; Preliminary results,
+  \emph{Paradissis D., Zaharis V., Raptakis C., Marinou A., Papanikolaou X., Anastasiou D., Papazissi K., Parks M., Parsons B., England P., Pyle D.},
+  1\textsuperscript{st} Meeting of Tectonic Geodesy, Athens, 25 January 2012.\\
+\end{longtable}
+\medskip
+
+% Footer
+\vfill
+\begin{center}
+  \begin{footnotesize}
+    Τελευταία Ενημέρωση: \today
+%    \href{\footerlink}{\texttt{\footerlink}}
+  \end{footnotesize}
+\end{center}
+
+\end{document}
