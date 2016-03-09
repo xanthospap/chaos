@@ -55,7 +55,7 @@ class A3(object):
 a = A3()
 print 'Call a.method()      ->', a.method()
 print 'Call a.method(1,2,3) ->', a.method(1,2,3)
-print 'Call A.method(1,2,3) ->', A3.method(1,2,3) ## static call
+print 'Call A.method(1,2,3) ->', A3.method(1,2,3)
 print '''
       !! Note that The class object (i.e. something like <class '__main__.A3'>)
       !! is (implicitely) passed as the first argument.
