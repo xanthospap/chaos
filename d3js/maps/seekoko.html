@@ -26,11 +26,13 @@
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/d3.geo.projection.v0.min.js" charset="utf-8"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
 <script>
 
 var width  = 960,
     height = 547,
-    pt_rad = 2;   /* radius of points on map */
+    pt_rad = 2,   /* radius of points on map */
+    bl_wdt = 2;   /* baseline width */
 
 // needed for zoom
 var scale0 = (width - 1) / 2 / Math.PI;
@@ -40,15 +42,7 @@ var projection = d3.geo.patterson()
     .translate([width / 2, height / 2])
     .precision(1);
 
-/*
-var zoom = d3.behavior.zoom()
-    .translate([width / 2, height / 2])
-    .scale(scale0)
-    .scaleExtent([scale0, 8 * scale0])
-    .on("zoom", zoomed); */
-
-var path = d3.geo.path()
-    .projection(projection);
+var path = d3.geo.path().projection(projection);
 
 var graticule = d3.geo.graticule();
 
@@ -71,7 +65,6 @@ var pointGroup = g.append('g');
 
 d3.json("world-50m.json", function(error, world) {
   if (error) throw error;
-
     // for non-zoom this should be svg (not g.*)
     mapGroup.insert("path", ".graticule")
             .datum(topojson.feature(world, world.objects.land))
@@ -101,45 +94,36 @@ d3.json("world-50m.json", function(error, world) {
                         return projection([d.value["lonest"], d.value["latest"]])[1];
                   })
                   .attr("fill", "red");
-                  
+        
         imageGroup.selectAll("image")
-                    .append("path")
-                    .data( d3.entries(data["amb_res_summary"]) )
-                    .attr("class", "route")
-                    
-        /*
                   .data( d3.entries(data["amb_res_summary"]) )
                   .enter()
                   .append("line")
-                  .interpolate("linear")
-                  .x(function(d){
-                        base  = d.value["station1"]
-                        var p = pts.filter(function(obj) { return obj.name === base; })[0];
-                        return projection([p.value["lon"], p.value["lat"]])[0];
+                  .attr("x1", function(d) {
+                    base  = d.value["station1"]
+                    p     = pts.filter(function(obj) {return obj.name === base; })[0];
+                    return projection([p["lon"], p["lat"]])[0];
                   })
-                  .y(function(d){
-                        base  = d.value["station1"]
-                        var p = pts.filter(function(obj) { return obj.name === base; })[0];
-                        return projection([p.value["lon"], p.value["lat"]])[1];
+                  .attr("y1", function(d) {
+                    base  = d.value["station1"]
+                    p     = pts.filter(function(obj) {return obj.name === base; })[0];
+                    return projection([p["lon"], p["lat"]])[1];
                   })
-                  */
-                  /*
-                  .append("path")
-                  .attr("d", function(d){
-                    base       = d.value["station1"]
-                    rover      = d.value["station2"]
-                    var base_p = pts.filter(function(obj) { return obj.name === base; })[0];
-                    var rovr_p = pts.filter(function(obj) { return obj.name === rover; })[0];
-                    return []
+                  .attr("x2", function(d) {
+                    base  = d.value["station2"]
+                    p     = pts.filter(function(obj) {return obj.name === base; })[0];
+                    return projection([p["lon"], p["lat"]])[0];
                   })
-                  .attr("stroke", "blue")
-                  .attr("stroke-width", 2)
-                  .attr("fill", "none");*/
+                  .attr("y2", function(d) {
+                    base  = d.value["station2"]
+                    p     = pts.filter(function(obj) {return obj.name === base; })[0];
+                    return projection([p["lon"], p["lat"]])[1];
+                  })
+                  .attr("stroke", "rgb(255,0,0)")
+                  .attr("stroke-width", bl_wdt)
     });
 
-
 });
-
 
 // zoom and pan
 var zoom = d3.behavior.zoom()
@@ -153,6 +137,9 @@ var zoom = d3.behavior.zoom()
             
         g.selectAll("path")  
             .attr("d", path.projection(projection));
+
+        g.selectAll("line")
+            .attr("stroke-width", bl_wdt / d3.event.scale);
         
 });
 
