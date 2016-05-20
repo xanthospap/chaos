@@ -1,4 +1,5 @@
 #include <type_traits>
+#include <iostream>
 
 //
 // Given classes a, b and c, i want to make a new class d that can only be
@@ -41,9 +42,23 @@ int main()
 // Solution B: In each of the classes (a, b and c), add a member variable and
 //             rely on this during construction of d instances.
 
-class a { public: constexpr static bool usable {true}; };
-class b { public: constexpr static bool usable {true}; };
-class c { public: constexpr static bool usable {true}; };
+class a {
+public:
+    constexpr static bool usable {true};
+};
+
+class b {
+public:
+    constexpr static bool usable {true};
+    explicit operator a() { return a{}; }
+};
+
+class c {
+public:
+    constexpr static bool usable {true};
+    explicit operator b() { return b{}; }
+    explicit operator a() { return a{}; }
+};
 
 template<class T,
         typename = std::enable_if_t<T::usable>
@@ -53,13 +68,35 @@ private:
     T m;
 public:
     d() : m{} {};
+
+    /// An instance can be instantiated using a parameter of type S, if:
+    /// a) S has a member variable ::usable == true and
+    /// b) an instance of type S can be cast to an instance of type T
+    template<class S,
+            typename = std::enable_if_t<T::usable>,
+            typename = std::enable_if_t<
+                std::is_same<T, decltype(static_cast<T>(S{}))>::value,
+                bool
+                >
+            >
+    d(S s) : m{} {};
 };
 
 int main()
 {
+    a a1;
+    b b1;
+    c c1;
+
     d<a> da;
     d<b> db;
-    // d<int> dint;
+    // d<int> dint; ERROR
+    
+    // A c instance can be cast to an a instance so the following should work
+    d<a> dac{c1};
+    // An a instance though cannot be cast to a c instance, so the following
+    // should fail!
+    // d<c> dca{a1}; ERROR
 
     return 0;
 }
