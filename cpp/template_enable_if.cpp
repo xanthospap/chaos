@@ -82,6 +82,15 @@ public:
     d(S s) : m{} {};
 };
 
+template<typename T,
+    typename = std::enable_if_t<
+        std::is_floating_point<T>::value
+        >
+    >
+    T deg2rad(T angle) noexcept
+{ return angle * 3.14 / 180.0; }
+
+
 int main()
 {
     a a1;
@@ -97,6 +106,8 @@ int main()
     // An a instance though cannot be cast to a c instance, so the following
     // should fail!
     // d<c> dca{a1}; ERROR
+    
+    std::cout << deg2rad(180.0) << "\n";
 
     return 0;
 }
