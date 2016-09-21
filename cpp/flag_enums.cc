@@ -94,7 +94,8 @@ int main()
  */
 
 /* the actual enums */
-enum class flag_option : int{
+enum class flag_option : int
+{
     bad_or_absent = 1,
     unknown_acc   = 2,
     maneuver      = 4,
