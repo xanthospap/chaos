@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
 /// WARNING
 /// ---------------------------------------------
@@ -11,49 +12,58 @@
 /// * operator new should be in a try/catch block
 ///
 
+struct submat;
+
 struct mat
 {
-    double* _dptr;
-    std::size_t _rows, _cols;
+    double*     _dptr;
+    std::size_t _rows,
+                _cols,
+                _srows, // only for submatrices; real number of rows
+                _scols; // only for submatrices; real number of cols
 
-    explicit mat(double* p = nullptr, std::size_t r = 0, std::size_t c = 0)
-    : _dptr(p), _rows(r), _cols(c)
+    explicit mat(double* p = nullptr, std::size_t r = 0, std::size_t c = 0,
+        std::size_t sr = 0, std::size_t sc = 0)
+    : _dptr(p), _rows(r), _cols(c), _srows(sr), _scols(sc)
     {}
 
     double&
     operator()(std::size_t r, std::size_t c)
     {
+        assert( c*_rows+r < _rows * _cols );
         return _dptr[c*_rows+r];
     }
 
     double
     operator()(std::size_t r, std::size_t c) const
     {
+        assert( c*_rows+r < _rows * _cols );
         return _dptr[c*_rows+r];
     }
 
     mat
     submatrix(std::size_t row1, std::size_t row2, std::size_t col1, std::size_t col2)
     {
-        assert( (row2 > row1) && (row2 <= this->_rows) );
-        assert( (col2 > col1) && (col2 <= this->_cols) );
+        assert( (row2 >= row1) && (row2 <= this->_rows) );
+        assert( (col2 >= col1) && (col2 <= this->_cols) );
 
-        std::size_t nr {this->_rows-(row2-row1)};
-        std::size_t nc {this->_cols-(col2-col1)};
+        std::size_t nr { (row2 == row1) ? 1 : (row2-row1) };
+        std::size_t nc { (col2 == col1) ? 1 : (col2-col1) };
+
+        std::cout<<"\n\tSubMatrix info: rows: "<< nr <<", cols: "<< nc <<"\n";
         
-        std::cout<<"\n\tNumber of rows for submatrix = "<<nr;
-        std::cout<<"\n\tNumber of cols for submatrix = "<<nc;
-        std::cout<<"\n\tStarting point is            = "<<this->operator()(row1, col1);
-
-        return mat{&(this->operator()(row1, col1)), nr, nc};
+        return mat{&(this->operator()(row1, col1)), _rows, _cols, nr, nc};
     }
 
     void
     dump() const
     {
-        for (std::size_t i = 0; i < this->_rows; ++i)
+        std::size_t real_rows = _srows ? _srows : _rows;
+        std::size_t real_cols = _scols ? _scols : _cols;
+        
+        for (std::size_t i = 0; i < real_rows; ++i)
         {
-            for (std::size_t j = 0; j < this->_cols; ++j)
+            for (std::size_t j = 0; j < real_cols; ++j)
             {
                 std::cout<< " " << this->operator()(i, j);
             }
@@ -61,6 +71,7 @@ struct mat
         }
     }
 };
+
 
 int main()
 {
@@ -79,25 +90,17 @@ int main()
     std::cout<<"Submatrix A(3:, 2:) is:\n";
     auto m1 = m.submatrix(3, ROWS, 2, COLS);
     m1.dump();
+    
+    std::cout<<"Submatrix A(3:, 2) is:\n";
+    m1 = m.submatrix(3, ROWS, 2, 2);
+    m1.dump();
+    
+    std::cout<<"Submatrix A(1:4, 1) is:\n";
+    m1 = m.submatrix(1, 4, 1, 1);
+    m1.dump();
 
     return 0;
 }
-
-/// \brief Resolve sub-matrix
-///
-/// Given a matrix A with dimensions mxn, if we are interested in the sub-matrix
-/// A(j:m, i:n), then this function will provide a pointer to the first element
-/// of this (sub-)matrix and set its rows and columns.
-///
-/*
-double*
-submatrix(const double* A, int m, int n, int j, int i, int& mm, int& nn)
-{
-    mm = m - j;
-    nn = n - i;
-    return &A[m*i]+j;
-}
-*/
 
 ///
 /// \brief Householder Vector
@@ -116,7 +119,6 @@ submatrix(const double* A, int m, int n, int j, int i, int& mm, int& nn)
 ///                  >= n (the function will overwrite u[0:n)).
 /// \return          The scalar b (see description).
 ///
-/*
 double
 householder_vector(const double* x, int n, double* u)
 {
@@ -146,7 +148,7 @@ householder_vector(const double* x, int n, double* u)
     for (int i = 1; i < n; ++i) u[i] /= tmp;
 
     return beta;
-}*/
+}
 
 ///
 /// \brief QR decomposition via Householder.
@@ -169,17 +171,31 @@ householder_vector(const double* x, int n, double* u)
 /// \param[out] beta The scalar b (see description).
 /// \return
 ///
-/*
 void
 householder_qr(double* A, int n, int m)
 {
     double b;
     double* u = new double[m];
+    double* t = new double[n*m];
     double* Ajj;
+    std::size_t idx;
 
     for (int j = 0; j < n; ++j) {
         Ajj = &A[m*j]+j;
-        b   = householder_vector(Ajj, m-j);
+        b   = householder_vector(Ajj, m-j+1, u);
         // A(j:m, j:n) = (I_(m-j+1)-buu^T)A(j:m,j:n)
+        // compute I_(m-j+1)-buu^T <-- t
+        idx = 0;
+        for (std::size_t ii = 0; ii < m-j+1; ii++) {
+            for (std::size_t jj = 0; jj < ii; jj++) {
+                t[idx] = t[ii*(m-j+1)+jj];
+                ++idx;
+            }
+            t[idx] = 1e0 - b*u[ii]*u[ii];
+            for (std::size_t jj = ii+1; jj < m-j+1; jj++) {
+                idx++;
+                t[idx] = b*u[ii]*u[jj];
+            }
+        }
     }
-}*/
+}
