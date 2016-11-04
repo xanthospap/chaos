@@ -2,13 +2,14 @@
 " see
 " http://www.ryanleaf.org/2015/10/22/getting-you-complete-me-ycm-to-work-on-fedora-22/
 
-set nocompatible
+set nocompatible " Disable vi-compatibility
 filetype off
 
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'       " Package Manager
 Plugin 'Valloric/YouCompleteMe'     " Omnicomplete automatically
+Plugin 'powerline/powerline'
 call vundle#end()
 
 " Set some YMC options
@@ -16,7 +17,7 @@ call vundle#end()
 let g:ycm_extra_conf_globlist = ['~/Software/phd/ngpt/*']
 
 " Set the color-scheme (/usr/share/vim/vim74/colors)
-colo elflord
+colo slate
 
 " Enable syntax highligting
 syntax on
@@ -54,3 +55,11 @@ nnoremap <F5> "=strftime("%c")<CR>P
 
 " When yanking, keep cursor at the end of yanked text
 vnoremap y y`]
+
+python from powerline.vim import setup as powerline_setup
+python powerline_setup()
+python del powerline_setup
+let g:Powerline_symbols = 'fancy'
+set laststatus=2
+set t_Co=256 " Explicitly tell Vim that the terminal supports 256 colors
+set encoding=utf-8 " Necessary to show Unicode glyphs
