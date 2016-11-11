@@ -110,9 +110,14 @@ private:
     T _start,
       _stop,
       _step;
-};
+}; // class tick_axis
 
-template<typename T>
+enum class storage_order : char { col_wise, row_wise };
+
+// forward decleration
+template<typename T, storage_order S> class gnode;
+
+template<typename T, storage_order S>
     class two_dim_grid
 {
 public:
@@ -130,57 +135,189 @@ public:
     num_pts() const noexcept
     { return _xaxis.num_pts() * _yaxis.num_pts(); }
 
+    std::size_t
+    x_pts() const noexcept { return _xaxis.num_pts(); }
+    
+    std::size_t
+    y_pts() const noexcept { return _yaxis.num_pts(); }
+
     grid_value
     val_at_index(const grid_node& node) const
     {
-        return std::pair<std::size_t, std::size_t>
-            (_xaxis.val_at_index(node.first), _yaxis.val_at_index(node.second));
+        return grid_value{_xaxis.val_at_index(node.first),
+                          _yaxis.val_at_index(node.second)};
     }
 
     grid_value
     operator()(const grid_node& node) const noexcept
     {
-        return std::pair<std::size_t, std::size_t>
-            (_xaxis(node.first), _yaxis(node.second));
+        return grid_value{_xaxis(node.first), _yaxis(node.second)};
     }
 
     grid_value
-    val_at_index(std::size_t x, std::size_t y) const
-    { return val_at_index(grid_node{x, y}); }
+    val_at_index(std::size_t xi, std::size_t yi) const
+    { return val_at_index(grid_node{xi, yi}); }
     
     grid_value
-    operator()(std::size_t x, std::size_t y) const noexcept
-    { return this->operator()(grid_node{x, y}); }
+    operator()(std::size_t xi, std::size_t yi) const noexcept
+    { return this->operator()(grid_node{xi, yi}); }
 
     grid_node
     nearest_neighbor(T x, T y) const noexcept
     {
-        auto n = grid_node{_xaxis.nearest_neighbor(x), _yaxis.nearest_neighbor(y)};
+        auto n = grid_node{_xaxis.nearest_neighbor(x),
+                           _yaxis.nearest_neighbor(y)};
         return n;
     }
 
+    gnode<T,S>
+    begin() const noexcept
+    {
+        return gnode<T,S>{0, 0, this};
+    }
+
+    gnode<T,S>
+    end() const noexcept
+    {
+        return gnode<T,S>{_xaxis.num_pts(), _yaxis.num_pts(), this};
+    }
+
+    // last node on row (i.e. y-axis row) with index yi.
+    gnode<T,S>
+    end_of_row(std::size_t yi) const noexcept
+    { return gnode<T,S>{_xaxis.num_pts(), yi, this}; }
+    
+    // first node on row (i.e. y-axis row) with index yi.
+    gnode<T,S>
+    start_of_row(std::size_t yi) const noexcept
+    { return gnode<T,S>{0, yi, this}; }
+    
+    // last node on column (i.e. x-axis row) with index xi.
+    gnode<T,S>
+    end_of_col(std::size_t xi) const noexcept
+    { return gnode<T,S>{xi, _yaxis.num_pts(), this}; }
+    
+    // first node on column (i.e. x-axis row) with index xi.
+    gnode<T,S>
+    start_of_col(std::size_t xi) const noexcept
+    { return gnode<T,S>{xi, 0, this}; }
+
 private:
     tick_axis<T> _xaxis, _yaxis;
-};
 
-template<typename T>
+    std::size_t
+    node2index_cw(const grid_node& node) const noexcept
+    {
+        auto x = node.first;
+        auto y = node.second;
+        return _yaxis.num_pts()*x + y;
+    }
+
+    std::size_t
+    node2index_rw(const grid_node& node) const noexcept
+    {
+        auto x = node.first;
+        auto y = node.second;
+        return _xaxis.num_pts()*y + x;
+    }
+};// class two_dim_grid
+
+template<typename T, storage_order S>
     class gnode
 {
 public:
-    gnode() : _x{0}, _y{0}, _tax{nullptr} {};
+    gnode() noexcept
+    : _x{0},
+      _y{0},
+      _grid{nullptr}
+    {};
     
     explicit
-    gnode(const tick_axis<T>* t)
+    gnode(const two_dim_grid<T,S>* t) noexcept
     : _x{0},
-      _y{0}
-      _tax{t}
+      _y{0},
+      _grid{t}
+    {};
+    
+    explicit
+    gnode(std::size_t xi, std::size_t yi, const two_dim_grid<T,S>* t) noexcept
+    : _x{xi},
+      _y{yi},
+      _grid{t}
     {};
 
+    bool
+    operator==(const gnode& node) const noexcept
+    {
+        return _grid == node._grid && (_x == node._x && _y == node._y);
+    }
+
+    bool
+    operator!=(const gnode& node) const noexcept
+    { return !(this->operator==(node)); }
+
+    gnode
+    next() const noexcept
+    {
+        if ( _x == _grid->x_pts() ) {
+            if ( _y == _grid->x_pts() ) {
+                return _grid->end();
+            }
+            return _grid->start_of_row(this->_y + 1);
+        }
+        return gnode {_x+1, _y, _grid};
+    }
+
+    gnode
+    next_right() const noexcept
+    {
+        if ( this->is_end_of_row() ) {
+            if ( this->is_end_of_col() ) {
+                return _grid->end();
+            }
+            return _grid->end_of_row(this->_y);
+        }
+        return gnode{_x+1, _y, _grid};
+    }
+
+    gnode
+    next_up() const noexcept
+    {
+
+    }
+
 private:
-    std::size_t _x,
-                _y;
-    const tick_axis<T>* _tax;
-}
+    std::size_t              _x,    ///< index of x axis
+                             _y;    ///< index of y axis
+    const two_dim_grid<T,S>* _grid; ///< ptr to the actual grid
+
+    bool
+    is_end_of_row() const noexcept { return _x >= _grid->x_pts(); }
+
+    bool
+    is_end_of_col() const noexcept { return _y >= _grid->y_pts(); }
+
+    gnode
+    next_on_right_colwise() const noexcept
+    {
+        gnode r {*this};
+        ++r._x;
+        return r;
+        /*
+        r._x += r._grid->y_pts();
+        if ( r._x >=  )
+        return r;
+        */
+    }
+    
+    gnode
+    on_right_rowwise() const noexcept
+    {
+        gnode r {*this};
+        r._x += 1;
+        return r;
+    }
+};// class gnode
 
 }
 
