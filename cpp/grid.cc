@@ -37,7 +37,7 @@ public:
     /// set correctly). The function will return false if something is wrong.
     bool
     validate() const noexcept
-    { return num_pts() < std::numeric_limits<std::size_t>::max(); }
+    { return static_cast<long>((_stop-_start)/_step) >= 0; }
 
     /// Check if the tick_axis is in ascending order.
     bool
@@ -182,22 +182,22 @@ public:
         return gnode<T,S>{_xaxis.num_pts(), _yaxis.num_pts(), this};
     }
 
-    // last node on row (i.e. y-axis row) with index yi.
+    /// last (valid) node on row (i.e. y-axis row) with index yi.
     gnode<T,S>
     end_of_row(std::size_t yi) const noexcept
     { return gnode<T,S>{_xaxis.num_pts(), yi, this}; }
     
-    // first node on row (i.e. y-axis row) with index yi.
+    /// first (valid) node on row (i.e. y-axis row) with index yi.
     gnode<T,S>
     start_of_row(std::size_t yi) const noexcept
     { return gnode<T,S>{0, yi, this}; }
     
-    // last node on column (i.e. x-axis row) with index xi.
+    /// last (valid) node on column (i.e. x-axis row) with index xi.
     gnode<T,S>
     end_of_col(std::size_t xi) const noexcept
     { return gnode<T,S>{xi, _yaxis.num_pts(), this}; }
     
-    // first node on column (i.e. x-axis row) with index xi.
+    /// first (valid) node on column (i.e. x-axis row) with index xi.
     gnode<T,S>
     start_of_col(std::size_t xi) const noexcept
     { return gnode<T,S>{xi, 0, this}; }
@@ -223,15 +223,35 @@ private:
 };// class two_dim_grid
 
 template<typename T, storage_order S>
+    class inode
+{
+public:
+    inode() noexcept : _index(0), _grid(nullptr) {};
+    explicit
+    inode(const two_dim_grid<T,S>* t) noexcept : _index{0}, _grid{t} {};
+    void
+    attach_to_grid(const two_dim_grid<T,S>* t) noexcept { _grid = t; }
+
+private:
+    std::size_t              _index;
+    const two_dim_grid<T,S>* _grid; ///< ptr to the actual grid
+}; //class inode
+
+template<typename T, storage_order S>
     class gnode
 {
 public:
+
+    /// Default Constructor; the created gnode is hanging(!), i.e. it does not
+    /// have an underlying grid.
     gnode() noexcept
     : _x{0},
       _y{0},
       _grid{nullptr}
     {};
     
+    /// Constructor using a valid grid; the gnode will point to the first node
+    /// of the grid.
     explicit
     gnode(const two_dim_grid<T,S>* t) noexcept
     : _x{0},
@@ -239,6 +259,7 @@ public:
       _grid{t}
     {};
     
+    /// Constructor using a valid grid and axis indexes.
     explicit
     gnode(std::size_t xi, std::size_t yi, const two_dim_grid<T,S>* t) noexcept
     : _x{xi},
@@ -246,21 +267,29 @@ public:
       _grid{t}
     {};
 
+    /// Equality operator; two gnodes are the same if they are in the same grid
+    /// and point to the same node.
     bool
     operator==(const gnode& node) const noexcept
     {
         return _grid == node._grid && (_x == node._x && _y == node._y);
     }
 
+    /// Inequality operator. See gnode::operator==()
     bool
     operator!=(const gnode& node) const noexcept
     { return !(this->operator==(node)); }
 
+    /// Return the next node; there are a number of different options here,
+    /// depending on the current (i.e. calling) node:
+    /// if the calling node is the last on the grid, then grid::end() is
+    /// returned else, the next node is returned (which may be in a different
+    /// column or/and row).
     gnode
     next() const noexcept
     {
         if ( _x == _grid->x_pts() ) {
-            if ( _y == _grid->x_pts() ) {
+            if ( _y == _grid->y_pts() ) {
                 return _grid->end();
             }
             return _grid->start_of_row(this->_y + 1);
@@ -303,11 +332,6 @@ private:
         gnode r {*this};
         ++r._x;
         return r;
-        /*
-        r._x += r._grid->y_pts();
-        if ( r._x >=  )
-        return r;
-        */
     }
     
     gnode
@@ -330,6 +354,16 @@ int main()
     std::uniform_real_distribution<double> distr; // define the distribution
     std::cout << std::fixed << std::setfill('0') << std::setprecision(3);
     double t;
+    
+    std::cout<<"\nGrid from -90 to 90, with step = -5. (INVALID!)";
+    tick_axis<double> te1(-90, 90, -5);
+    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te1.validate();
+    std::cout<<"\nGrid from 90 to -90, with step = 5. (INVALID!)";
+    tick_axis<double> te2(90, -90, 5);
+    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te2.validate();
+    std::cout<<"\nGrid from 90 to 180, with step = -5. (INVALID!)";
+    tick_axis<double> te3(90, 180, -5);
+    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te3.validate();
 
     std::cout<<"\nGrid from -90 to 90, with step = 5.";
     tick_axis<double> t1(-90, 90, 5);
