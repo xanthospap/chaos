@@ -44,7 +44,8 @@ public:
     is_ascending() const noexcept
     { return _stop > _start; }
 
-    /// Return the number of ticks on the axis.
+    /// Return the number of ticks on the axis. Valid indexes span the range:
+    /// [0, num_pts()-1] or [0, num_pts()).
     std::size_t
     num_pts() const noexcept
     { return static_cast<std::size_t>((_stop - _start) / _step) + 1; }
@@ -61,25 +62,13 @@ public:
         std::size_t idx { this->index(val) };
         // Note: the division should always be with a float/double 2; just
         //       imagine the case where the template parameter T is int!
-        return  std::abs(val-this->val_at_index(idx)) > std::abs(_step)/2e0
+        return  std::abs(val-this->operator()(idx)) > std::abs(_step)/2e0
                 ? ( (idx == num_pts()-1) ? idx : ++idx )
                 : idx;
     }
     
-    /// Given an index of a tick, return it's value.
-    T
-    val_at_index(std::size_t idx) const
-    {
-#ifdef RANGE_CHECK
-        if ( idx >= num_pts() ) {
-            throw std::out_of_range("tick_axis::val_at_index() invalid index.");
-        }
-#endif
-        return _start + idx*_step;
-    }
-
     /// Given an index of a tick, return it's value. No check is performed on
-    /// on the validity of the given index (meaning it could be out of range)
+    /// on the validity of the given index (meaning it could be out of range).
     T
     operator()(std::size_t idx) const noexcept
     { return _start + idx * _step; }
@@ -121,9 +110,11 @@ template<typename T, storage_order S>
     class two_dim_grid
 {
 public:
-    using grid_node  = std::pair<std::size_t, std::size_t>;
-    using grid_value = std::pair<T, T>;
 
+    /// Constructor given start, stop and step for each of the axis (i.e. x
+    /// and y). No check is performed on the validity of the given input
+    /// arguments. To check if the constructed grid is valid, use the validate()
+    /// method.
     explicit
     two_dim_grid(T xstart, T xstop, T xstep, T ystart, T ystop, T ystep)
     noexcept
@@ -131,16 +122,50 @@ public:
       _yaxis{ystart, ystop, ystep}
     {}
 
+    /// Check if the calling grid is valid.
+    bool
+    validate() const noexcept
+    { return _xaxis.validate() && _yaxis.validate(); }
+
+    /// Number of points (or grid nodes) on the gird.
     std::size_t
     num_pts() const noexcept
     { return _xaxis.num_pts() * _yaxis.num_pts(); }
 
+    /// Number of nodes on the x-axis.
     std::size_t
     x_pts() const noexcept { return _xaxis.num_pts(); }
     
+    /// Number of nodes on the y-axis.
     std::size_t
     y_pts() const noexcept { return _yaxis.num_pts(); }
 
+    /// Given two indexes (i.e. on the x and y-axis respectively), return
+    /// the values (x and y) on the node.
+    auto
+    index2node_values(T xidx, T yidx) const noexcept
+    {
+        return std::pair<T,T>{_xaxis.operator()(xidx), _yaxis.operator()(yidx)};
+    }
+    
+    /// Given a value, return the index of the nearest node.
+    gnode<T,S>
+    nearest_neighbor(T x, T y) const noexcept
+    {
+        std::size_t x_idx { _xaxis.nearest_neighbor(x) };
+        std::size_t y_idx { _yaxis.nearest_neighbor(y) };
+        return gnode<T,S>{x_idx, y_idx, this};
+    }
+
+    gnode<T,S>
+    node_on_left(T x, T y) const noexcept
+    {
+        std::size_t x_idx { _xaxis.index(x) };
+        std::size_t y_idx { _yaxis.index(y) };
+        return gnode<T,S>{x_idx, y_idx, this};
+    }
+
+    /*
     grid_value
     val_at_index(const grid_node& node) const
     {
@@ -169,7 +194,9 @@ public:
                            _yaxis.nearest_neighbor(y)};
         return n;
     }
+    */
 
+    /*
     gnode<T,S>
     begin() const noexcept
     {
@@ -182,7 +209,7 @@ public:
         return gnode<T,S>{_xaxis.num_pts(), _yaxis.num_pts(), this};
     }
 
-    /// last (valid) node on row (i.e. y-axis row) with index yi.
+    /// Past-the-end (invalid) node on row (i.e. y-axis row) with index yi.
     gnode<T,S>
     end_of_row(std::size_t yi) const noexcept
     { return gnode<T,S>{_xaxis.num_pts(), yi, this}; }
@@ -191,8 +218,13 @@ public:
     gnode<T,S>
     start_of_row(std::size_t yi) const noexcept
     { return gnode<T,S>{0, yi, this}; }
+
+    /// Prior-to-first (invalid) node on row (i.e. y-axis row) with index yi.
+    gnode<T,S>
+    before_start_of_row(std::size_t yi) const noexcept
+    { return gnode<T,S>{std::numeric_limits<std::size_t>::max(), yi, this}; }
     
-    /// last (valid) node on column (i.e. x-axis row) with index xi.
+    /// Past-the-end (invalid) node on column (i.e. x-axis row) with index xi.
     gnode<T,S>
     end_of_col(std::size_t xi) const noexcept
     { return gnode<T,S>{xi, _yaxis.num_pts(), this}; }
@@ -201,10 +233,18 @@ public:
     gnode<T,S>
     start_of_col(std::size_t xi) const noexcept
     { return gnode<T,S>{xi, 0, this}; }
+    
+    /// Prior-to-first (invalid) node on column (i.e. x-axis row) with index xi.
+    gnode<T,S>
+    before_start_of_col(std::size_t xi) const noexcept
+    { return gnode<T,S>{xi, std::numeric_limits<std::size_t>::max(), this}; }
+    */
 
 private:
-    tick_axis<T> _xaxis, _yaxis;
+    tick_axis<T> _xaxis,
+                 _yaxis;
 
+    /*
     std::size_t
     node2index_cw(const grid_node& node) const noexcept
     {
@@ -220,23 +260,10 @@ private:
         auto y = node.second;
         return _xaxis.num_pts()*y + x;
     }
+    */
 };// class two_dim_grid
 
-template<typename T, storage_order S>
-    class inode
-{
-public:
-    inode() noexcept : _index(0), _grid(nullptr) {};
-    explicit
-    inode(const two_dim_grid<T,S>* t) noexcept : _index{0}, _grid{t} {};
-    void
-    attach_to_grid(const two_dim_grid<T,S>* t) noexcept { _grid = t; }
-
-private:
-    std::size_t              _index;
-    const two_dim_grid<T,S>* _grid; ///< ptr to the actual grid
-}; //class inode
-
+/// A grid-node class
 template<typename T, storage_order S>
     class gnode
 {
@@ -280,6 +307,7 @@ public:
     operator!=(const gnode& node) const noexcept
     { return !(this->operator==(node)); }
 
+    /*
     /// Return the next node; there are a number of different options here,
     /// depending on the current (i.e. calling) node:
     /// if the calling node is the last on the grid, then grid::end() is
@@ -297,6 +325,10 @@ public:
         return gnode {_x+1, _y, _grid};
     }
 
+    /// Return the node on the right (i.e. of the current calling node). if the
+    /// calling node is the last on the grid node, then grid::end() is returned;
+    /// if the calling node is already the one-past the row, then
+    /// _grid::end_of_row() is returned.
     gnode
     next_right() const noexcept
     {
@@ -312,14 +344,27 @@ public:
     gnode
     next_up() const noexcept
     {
-
+        if ( _y == 0 || _y == std::numeric_limits<std::size_t>::max() ) {
+            return _grid->before_start_of_col(this->_x);
+        }
+        return gnode{_x, _y+1, this};
     }
+    */
+#ifdef DEBUG
+    void
+    dump() const noexcept
+    {
+        std::pair<T,T> vals = _grid->index2node_values(_x, _y);
+        std::cout<< "(" << vals.first << ", " << vals.second << ")";
+    }
+#endif
 
 private:
     std::size_t              _x,    ///< index of x axis
                              _y;    ///< index of y axis
     const two_dim_grid<T,S>* _grid; ///< ptr to the actual grid
 
+    /*
     bool
     is_end_of_row() const noexcept { return _x >= _grid->x_pts(); }
 
@@ -341,11 +386,13 @@ private:
         r._x += 1;
         return r;
     }
+    */
 };// class gnode
 
 }
 
 using ngpt::tick_axis;
+using ngpt::two_dim_grid;
 
 int main()
 {
@@ -353,8 +400,29 @@ int main()
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_real_distribution<double> distr; // define the distribution
     std::cout << std::fixed << std::setfill('0') << std::setprecision(3);
-    double t;
+
+    std::cout<<"\nGrid:";
+    std::cout<<"\nX range -90 :   90 :  2.5";
+    std::cout<<"\nY range 180 : -180 : -5.0";
+    two_dim_grid<double, ngpt::storage_order::row_wise> g{-90, 90, 2.5, 180, -180, -5};
+    std::uniform_real_distribution<double>::param_type new_range1 {-90, 90};
+    std::uniform_real_distribution<double>::param_type new_range2 {-180, 180};
+    ngpt::gnode<double,ngpt::storage_order::row_wise> n;
+    double xi,yi;
+    for (int i=0; i<20; i++) {
+        distr.param(new_range1);
+        xi = distr(eng);
+        distr.param(new_range2);
+        yi = distr(eng);
+        n = g.nearest_neighbor(xi, yi);
+        std::cout<<"\nPoint ("<<xi<<", "<<yi<<") nearest neghr = ";
+        n.dump();
+        n = g.node_on_left(xi, yi);
+        std::cout<<" left node = ";
+        n.dump();
+    }
     
+    /*
     std::cout<<"\nGrid from -90 to 90, with step = -5. (INVALID!)";
     tick_axis<double> te1(-90, 90, -5);
     std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te1.validate();
@@ -369,6 +437,9 @@ int main()
     tick_axis<double> t1(-90, 90, 5);
     std::cout<<"\n\tAxis is ascending?"<< std::boolalpha << t1.is_ascending();
     std::cout<<"\n\tNum of points:    "<<t1.num_pts();
+    for (auto i = 0; i < t1.num_pts(); i++) {
+        std::cout<<"\n\tt1["<<i<<"] = " <<t1(i);
+    }
     // set the range for the random generator
     std::uniform_real_distribution<double>::param_type new_range1 {-90, 90};
     distr.param(new_range1);
@@ -470,6 +541,7 @@ int main()
     for (int i=0; i<t4.num_pts(); i++) {
         std::cout<<" " << j+i*t4.step();
     }
+    */
 
     std::cout<<"\n";
     return 0;
