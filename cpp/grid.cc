@@ -104,9 +104,10 @@ private:
 enum class storage_order : char { col_wise, row_wise };
 
 // forward decleration
-template<typename T, storage_order S> class gnode;
+template<typename T, typename S> class gnode;
 
-template<typename T, storage_order S>
+template<typename T, // index type
+         typename S> // grid value type
     class two_dim_grid
 {
 public:
@@ -119,7 +120,8 @@ public:
     two_dim_grid(T xstart, T xstop, T xstep, T ystart, T ystop, T ystep)
     noexcept
     : _xaxis{xstart, xstop, xstep},
-      _yaxis{ystart, ystop, ystep}
+      _yaxis{ystart, ystop, ystep},
+      _data{nullptr}
     {}
 
     /// Check if the calling grid is valid.
@@ -140,6 +142,47 @@ public:
     std::size_t
     y_pts() const noexcept { return _yaxis.num_pts(); }
 
+    /// Check if the grid does actually hold values.
+    bool
+    has_data() const noexcept
+    {
+        return _data != nullptr;
+    }
+
+    /// Allocate memory for the grid values. Returns false if allocation fails.
+    bool
+    allocate_mem()
+    {
+        try {
+            _data = new S[this->num_pts()];
+            return true;
+        } catch (std::bad_alloc&) {
+            _data = nullptr;
+            return false;
+        }
+    }
+
+    /// De-allocate memory of the grid values.
+    bool
+    dealocate_mem()
+    {
+        if ( _data ) {
+            delete[] _data;
+            _data = nullptr;
+            return true;
+        }
+        return false;
+    }
+
+    /// Given indexes for the x and y axis, return a reference to the corre-
+    /// sponding grid value.
+    S&
+    grid_value_at(std::size_t xidx, std::size_t yidx)
+    {
+        std::size_t idx = this->node2index_rw(xidx, yidx);
+        return _data[idx];
+    }
+
     /// Given two indexes (i.e. on the x and y-axis respectively), return
     /// the values (x and y) on the node.
     auto
@@ -157,6 +200,7 @@ public:
         return gnode<T,S>{x_idx, y_idx, this};
     }
 
+    /*
     gnode<T,S>
     node_on_left(T x, T y) const noexcept
     {
@@ -164,39 +208,8 @@ public:
         std::size_t y_idx { _yaxis.index(y) };
         return gnode<T,S>{x_idx, y_idx, this};
     }
-
-    /*
-    grid_value
-    val_at_index(const grid_node& node) const
-    {
-        return grid_value{_xaxis.val_at_index(node.first),
-                          _yaxis.val_at_index(node.second)};
-    }
-
-    grid_value
-    operator()(const grid_node& node) const noexcept
-    {
-        return grid_value{_xaxis(node.first), _yaxis(node.second)};
-    }
-
-    grid_value
-    val_at_index(std::size_t xi, std::size_t yi) const
-    { return val_at_index(grid_node{xi, yi}); }
-    
-    grid_value
-    operator()(std::size_t xi, std::size_t yi) const noexcept
-    { return this->operator()(grid_node{xi, yi}); }
-
-    grid_node
-    nearest_neighbor(T x, T y) const noexcept
-    {
-        auto n = grid_node{_xaxis.nearest_neighbor(x),
-                           _yaxis.nearest_neighbor(y)};
-        return n;
-    }
     */
 
-    /*
     gnode<T,S>
     begin() const noexcept
     {
@@ -209,40 +222,10 @@ public:
         return gnode<T,S>{_xaxis.num_pts(), _yaxis.num_pts(), this};
     }
 
-    /// Past-the-end (invalid) node on row (i.e. y-axis row) with index yi.
-    gnode<T,S>
-    end_of_row(std::size_t yi) const noexcept
-    { return gnode<T,S>{_xaxis.num_pts(), yi, this}; }
-    
-    /// first (valid) node on row (i.e. y-axis row) with index yi.
-    gnode<T,S>
-    start_of_row(std::size_t yi) const noexcept
-    { return gnode<T,S>{0, yi, this}; }
-
-    /// Prior-to-first (invalid) node on row (i.e. y-axis row) with index yi.
-    gnode<T,S>
-    before_start_of_row(std::size_t yi) const noexcept
-    { return gnode<T,S>{std::numeric_limits<std::size_t>::max(), yi, this}; }
-    
-    /// Past-the-end (invalid) node on column (i.e. x-axis row) with index xi.
-    gnode<T,S>
-    end_of_col(std::size_t xi) const noexcept
-    { return gnode<T,S>{xi, _yaxis.num_pts(), this}; }
-    
-    /// first (valid) node on column (i.e. x-axis row) with index xi.
-    gnode<T,S>
-    start_of_col(std::size_t xi) const noexcept
-    { return gnode<T,S>{xi, 0, this}; }
-    
-    /// Prior-to-first (invalid) node on column (i.e. x-axis row) with index xi.
-    gnode<T,S>
-    before_start_of_col(std::size_t xi) const noexcept
-    { return gnode<T,S>{xi, std::numeric_limits<std::size_t>::max(), this}; }
-    */
-
 private:
-    tick_axis<T> _xaxis,
-                 _yaxis;
+    tick_axis<T> _xaxis, // the x-axis
+                 _yaxis; // the y-axis
+    S*           _data;  // the grid values
 
     /*
     std::size_t
@@ -252,19 +235,18 @@ private:
         auto y = node.second;
         return _yaxis.num_pts()*x + y;
     }
+    */
 
     std::size_t
-    node2index_rw(const grid_node& node) const noexcept
+    node2index_rw(std::size_t xi, std::size_t yi) const noexcept
     {
-        auto x = node.first;
-        auto y = node.second;
-        return _xaxis.num_pts()*y + x;
+        return _xaxis.num_pts()*yi + xi;
     }
-    */
+
 };// class two_dim_grid
 
 /// A grid-node class
-template<typename T, storage_order S>
+template<typename T, typename S>
     class gnode
 {
 public:
@@ -404,10 +386,10 @@ int main()
     std::cout<<"\nGrid:";
     std::cout<<"\nX range -90 :   90 :  2.5";
     std::cout<<"\nY range 180 : -180 : -5.0";
-    two_dim_grid<double, ngpt::storage_order::row_wise> g{-90, 90, 2.5, 180, -180, -5};
+    two_dim_grid<double, double> g{-90, 90, 2.5, 180, -180, -5};
     std::uniform_real_distribution<double>::param_type new_range1 {-90, 90};
     std::uniform_real_distribution<double>::param_type new_range2 {-180, 180};
-    ngpt::gnode<double,ngpt::storage_order::row_wise> n;
+    ngpt::gnode<double, double> n;
     double xi,yi;
     for (int i=0; i<20; i++) {
         distr.param(new_range1);
