@@ -18,7 +18,7 @@ fi
 ## Format the starting page, something like:
 ##+ https://en.wikipedia.org/wiki/August_3
 ## Beware how we treat backslashes!
-WPAGE="https:\/\/en.wikipedia.org\/wiki\/$(date +"%B_%d")"
+WPAGE="https:\/\/en.wikipedia.org\/wiki\/$(LC_TIME=en_US date +"%B_%d")"
 
 ## Change the startup page inside the prefs.js file. This looks like:
 ##+ user_pref("browser.startup.homepage", "https://en.wikipedia.org/wiki/August_23");
