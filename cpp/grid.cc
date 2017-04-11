@@ -1,31 +1,46 @@
 #ifndef __NGPT_GRID_HPP__
 #define __NGPT_GRID_HPP__
 
-#include <cstddef>
-#include <utility>
-#ifdef RANGE_CHECK
-#include <cassert>
-#include <limits>
-#endif
+#include <cmath>
+#include <type_traits>
+
 #ifdef DEBUG
 #include <iostream>
 #include <iomanip>
 #include <random>
+#include <cassert>
 #endif
 
 namespace ngpt
 {
 
+/// @class tick_axis
+/// @brief A tick-axis is just an anotated axis.
+///
+/// A tick_axis is an anotated (every _step) axis, starting from _start and
+/// ending at _stop.
 /// The tick_axis is inlusive! Given e.g. the range [90, -90], both 90 and -90
-/// will be valid nodes.
-template<class T>
+/// will be valid nodes (i.e. ticks).
+///
+/// @tparam T the type of the axis, which can be any floating point type.
+///
+template<class T,
+        typename = std::enable_if_t<std::is_floating_point<T>::value>
+        >
     class tick_axis
 {
 public:
 
-    /// Constructor. Set start, stop and step. This can never fail (i.e. throw)
-    /// but the given parameters could be wrong. Use the tick_axis::validate
-    /// method to check if the tick_axis is constructed correctly.
+    /// Constructor. Set start, stop and step.
+    ///
+    /// @warning         This can never fail (i.e. throw) but the given 
+    ///                  parameters could be wrong. Use the tick_axis::validate
+    ///                  method to check if the tick_axis is constructed
+    ///                  correctly.
+    /// 
+    /// @param[in] start The starting tick on the axis (inclusive).
+    /// @param[in] stop  The ending tick on the axis (inclusive).
+    /// @param[in] step  The step.
     explicit
     tick_axis(T start, T stop, T step = T{1}) noexcept
     : _start{start},
@@ -35,50 +50,78 @@ public:
 
     /// Validate that this tick_axis is actualy valid (i.e. its parameters are
     /// set correctly). The function will return false if something is wrong.
+    ///
+    /// @return True if the axis is setup correctly; false otherwise.
+    ///
+    /// @todo We should also check that (stop-start)%step == 0
     bool
     validate() const noexcept
     { return static_cast<long>((_stop-_start)/_step) >= 0; }
 
     /// Check if the tick_axis is in ascending order.
     bool
-    is_ascending() const noexcept
-    { return _stop > _start; }
+    is_ascending() const noexcept { return _stop > _start; }
 
     /// Return the number of ticks on the axis. Valid indexes span the range:
-    /// [0, num_pts()-1] or [0, num_pts()).
+    /// [0, num_pts()-1] or [0, num_pts()), i.e. the ticks are inclusive.
     std::size_t
     num_pts() const noexcept
     { return static_cast<std::size_t>((_stop - _start) / _step) + 1; }
 
-    /// Given a value, return the index of the nearest **left** axis tick.
+    /// Given a value, return the index of the nearest **left** (axis) tick.
+    /// The index may correspond to a tick greater than or less than the input
+    /// value, depending on whether the axis is in ascending or descending
+    /// order.
+    ///
+    /// @param[in] val An input value, to find the nearest tick, left of it
+    ///                (i.e. on the tick-axis). This value should be in the
+    ///                range [_start, _stop].
+    /// @return        The index of the tick, left of the input value.
+    ///
+    /// @warning       Even if the input value falls outside the axis limits,
+    ///                this function will compute and return a (maybe erroneus)
+    ///                index. Check the value before feeding it to the function.
     std::size_t
-    index(T val) const noexcept
+    index(T val) const noexcept 
     { return static_cast<std::size_t>((val-_start)/_step); }
 
     /// Given a value, return the index of the nearest axis tick.
+    ///
+    /// @param[in] val An input value for which to find the nearest tick on the
+    ///                axis. This value should be in the range [_start, _stop].
+    /// @return        The index of the tick nearest to the input value.
+    ///
+    /// @warning       Even if the input value falls outside the axis limits,
+    ///                this function will compute and return a (maybe erroneus)
+    ///                index. Check the value before feeding it to the function.
     std::size_t
     nearest_neighbor(T val) const noexcept
-    {
-        std::size_t idx { this->index(val) };
-        // Note: the division should always be with a float/double 2; just
-        //       imagine the case where the template parameter T is int!
-        return  std::abs(val-this->operator()(idx)) > std::abs(_step)/2e0
-                ? ( (idx == num_pts()-1) ? idx : ++idx )
-                : idx;
-    }
+    { return static_cast<std::size_t>(std::round((val-_start)/_step)); }
     
-    /// Given an index of a tick, return it's value. No check is performed on
-    /// on the validity of the given index (meaning it could be out of range).
+    /// Given an index of a tick, return it's value.
+    ///
+    /// @param[in] idx The index of a tick on the axis, for which we want its
+    ///                actual value. 
+    /// @return        The value of the tick with index idx.
+    /// 
+    /// @warning       No check is performed on the validity of the given index
+    ///                (meaning it could be out of range). Even if the given
+    ///                index is out of range, a value will be returned.
+    /// @code{.cpp}
+    ///   tick_axis<double> t {-90, 90, 5};
+    ///   assert( t(0) == t.start() );
+    ///   assert( t(t.num_pts()-1) == t.stop() );
+    /// @endcode
     T
     operator()(std::size_t idx) const noexcept
     { return _start + idx * _step; }
 
-    /// Maximum value on the tick_axis
+    /// Maximum value on the tick_axis (this may be **not** the rightmost value).
     T
     max_val() const noexcept
     { return this->is_ascending() ? _stop : _start; }
 
-    /// Minimum value on the tick_axis
+    /// Minimum value on the tick_axis (this may be **not** the leftmost value).
     T
     min_val() const noexcept
     { return this->is_ascending() ? _start : _stop; }
@@ -96,285 +139,96 @@ public:
     step() const noexcept { return _step; }
 
 private:
-    T _start,
-      _stop,
-      _step;
+    T _start, ///< the leftmost value/tick of the axis.
+      _stop,  ///< the rightmost value/tick of the axis.
+      _step;  ///< the step size.
 }; // class tick_axis
 
-enum class storage_order : char { col_wise, row_wise };
-
-// forward decleration
-template<typename T, typename S> class gnode;
-
-template<typename T, // index type
-         typename S> // grid value type
-    class two_dim_grid
+template<typename T>
+    class grid2d
 {
 public:
+    typedef std::tuple<std::size_t, std::size_t> index_pair;
+    typedef std::tuple<T, T>                     value_pair;
 
-    /// Constructor given start, stop and step for each of the axis (i.e. x
-    /// and y). No check is performed on the validity of the given input
-    /// arguments. To check if the constructed grid is valid, use the validate()
-    /// method.
+    /// Constructor. Set start, stop and step for both axis (x and y).
+    ///
+    /// @warning         This can never fail (i.e. throw) but the given 
+    ///                  parameters could be wrong. Use the grid2d::validate
+    ///                  method to check if the tick_axis are constructed
+    ///                  correctly.
+    /// 
+    /// @param[in] xstart The starting tick on the x-axis (inclusive).
+    /// @param[in] xstop  The ending tick on the x-axis (inclusive).
+    /// @param[in] xstep  The step of the x-axis.
+    /// @param[in] ystart The starting tick on the y-axis (inclusive).
+    /// @param[in] ystop  The ending tick on the y-axis (inclusive).
+    /// @param[in] ystep  The step of the y-axis.
     explicit
-    two_dim_grid(T xstart, T xstop, T xstep, T ystart, T ystop, T ystep)
-    noexcept
+    grid2d(T xstart, T xstop, T xstep, T ystart, T ystop, T ystep) noexcept
     : _xaxis{xstart, xstop, xstep},
-      _yaxis{ystart, ystop, ystep},
-      _data{nullptr}
+      _yaxis{ystart, ystop, ystep}
     {}
 
-    /// Check if the calling grid is valid.
+    /// Validate that this grid2d is actualy valid (i.e. its parameters are
+    /// set correctly). The function will return false if something is wrong.
+    ///
+    /// @return True if the axis are setup correctly; false otherwise.
     bool
     validate() const noexcept
     { return _xaxis.validate() && _yaxis.validate(); }
 
-    /// Number of points (or grid nodes) on the gird.
-    std::size_t
-    num_pts() const noexcept
-    { return _xaxis.num_pts() * _yaxis.num_pts(); }
-
-    /// Number of nodes on the x-axis.
-    std::size_t
-    x_pts() const noexcept { return _xaxis.num_pts(); }
-    
-    /// Number of nodes on the y-axis.
-    std::size_t
-    y_pts() const noexcept { return _yaxis.num_pts(); }
-
-    /// Check if the grid does actually hold values.
-    bool
-    has_data() const noexcept
+    /// Transform an index_pair (i.e. a pair of x- and y-axis tick indexes) to
+    /// their respective values.
+    ///
+    /// @param[in] idx_pair The index pair; first element is the x-axis tick
+    ///                     index, while the second element is the y-axis tick
+    ///                     index.
+    /// @return             A value_pair corresponding to the values at the
+    ///                     tick indexes in idx_pair.
+    /// @warning            No check is performed on the given indexes (i.e. if
+    ///                     they indeed lie on the axis ranges).
+    value_pair
+    idx_pair2val_pair(index_pair&& idx_pair) const noexcept
     {
-        return _data != nullptr;
+        return value_pair{_xaxis(std::get<0>(idx_pair)),
+                          _yaxis(std::get<1>(idx_pair))};
     }
 
-    /// Allocate memory for the grid values. Returns false if allocation fails.
-    bool
-    allocate_mem()
+    /// Find the node (i.e. x-axis & y-axis tick indexes) on the bottom-left of
+    /// the given value-pair.
+    ///
+    /// @param[in] xval The input xval, should be in range:
+    ///                 [xaxis.start, xaxis.stop]
+    /// @param[in] yval The input xval, should be in range:
+    ///                 [yaxis.start, yaxis.stop]
+    /// @return         An index pair; the first value (of the pair) is the
+    ///                 index of the x-axis tick, immidiately left of xval; the
+    ///                 second value is the y-axis tick index 
+    ///                 immidiately left (actually bottom) of yval.
+    /// @warning        Even if the input values fall outside the axis limits,
+    ///                 this function will compute and return (maybe erroneus)
+    ///                 indexes. Check the values before feeding them to the
+    ///                 function.
+    /// @note           This function only returns indexes; should the user want
+    ///                 the actual values on the ticks, then transform the
+    ///                 result with the grid2d::idx_pair2val_pair function.
+    index_pair
+    bottom_left(T xval, T yval) const noexcept
     {
-        try {
-            _data = new S[this->num_pts()];
-            return true;
-        } catch (std::bad_alloc&) {
-            _data = nullptr;
-            return false;
-        }
-    }
-
-    /// De-allocate memory of the grid values.
-    bool
-    dealocate_mem()
-    {
-        if ( _data ) {
-            delete[] _data;
-            _data = nullptr;
-            return true;
-        }
-        return false;
-    }
-
-    /// Given indexes for the x and y axis, return a reference to the corre-
-    /// sponding grid value.
-    S&
-    grid_value_at(std::size_t xidx, std::size_t yidx)
-    {
-        std::size_t idx = this->node2index_rw(xidx, yidx);
-        return _data[idx];
-    }
-
-    /// Given two indexes (i.e. on the x and y-axis respectively), return
-    /// the values (x and y) on the node.
-    auto
-    index2node_values(T xidx, T yidx) const noexcept
-    {
-        return std::pair<T,T>{_xaxis.operator()(xidx), _yaxis.operator()(yidx)};
-    }
-    
-    /// Given a value, return the index of the nearest node.
-    gnode<T,S>
-    nearest_neighbor(T x, T y) const noexcept
-    {
-        std::size_t x_idx { _xaxis.nearest_neighbor(x) };
-        std::size_t y_idx { _yaxis.nearest_neighbor(y) };
-        return gnode<T,S>{x_idx, y_idx, this};
-    }
-
-    /*
-    gnode<T,S>
-    node_on_left(T x, T y) const noexcept
-    {
-        std::size_t x_idx { _xaxis.index(x) };
-        std::size_t y_idx { _yaxis.index(y) };
-        return gnode<T,S>{x_idx, y_idx, this};
-    }
-    */
-
-    gnode<T,S>
-    begin() const noexcept
-    {
-        return gnode<T,S>{0, 0, this};
-    }
-
-    gnode<T,S>
-    end() const noexcept
-    {
-        return gnode<T,S>{_xaxis.num_pts(), _yaxis.num_pts(), this};
+        return index_pair{_xaxis.index(xval), _yaxis.index(yval)};
     }
 
 private:
-    tick_axis<T> _xaxis, // the x-axis
-                 _yaxis; // the y-axis
-    S*           _data;  // the grid values
+    tick_axis<T> _xaxis,
+                 _yaxis;
+}; // class grid2d
 
-    /*
-    std::size_t
-    node2index_cw(const grid_node& node) const noexcept
-    {
-        auto x = node.first;
-        auto y = node.second;
-        return _yaxis.num_pts()*x + y;
-    }
-    */
+} // namespace ngpt
 
-    std::size_t
-    node2index_rw(std::size_t xi, std::size_t yi) const noexcept
-    {
-        return _xaxis.num_pts()*yi + xi;
-    }
 
-};// class two_dim_grid
-
-/// A grid-node class
-template<typename T, typename S>
-    class gnode
-{
-public:
-
-    /// Default Constructor; the created gnode is hanging(!), i.e. it does not
-    /// have an underlying grid.
-    gnode() noexcept
-    : _x{0},
-      _y{0},
-      _grid{nullptr}
-    {};
-    
-    /// Constructor using a valid grid; the gnode will point to the first node
-    /// of the grid.
-    explicit
-    gnode(const two_dim_grid<T,S>* t) noexcept
-    : _x{0},
-      _y{0},
-      _grid{t}
-    {};
-    
-    /// Constructor using a valid grid and axis indexes.
-    explicit
-    gnode(std::size_t xi, std::size_t yi, const two_dim_grid<T,S>* t) noexcept
-    : _x{xi},
-      _y{yi},
-      _grid{t}
-    {};
-
-    /// Equality operator; two gnodes are the same if they are in the same grid
-    /// and point to the same node.
-    bool
-    operator==(const gnode& node) const noexcept
-    {
-        return _grid == node._grid && (_x == node._x && _y == node._y);
-    }
-
-    /// Inequality operator. See gnode::operator==()
-    bool
-    operator!=(const gnode& node) const noexcept
-    { return !(this->operator==(node)); }
-
-    /*
-    /// Return the next node; there are a number of different options here,
-    /// depending on the current (i.e. calling) node:
-    /// if the calling node is the last on the grid, then grid::end() is
-    /// returned else, the next node is returned (which may be in a different
-    /// column or/and row).
-    gnode
-    next() const noexcept
-    {
-        if ( _x == _grid->x_pts() ) {
-            if ( _y == _grid->y_pts() ) {
-                return _grid->end();
-            }
-            return _grid->start_of_row(this->_y + 1);
-        }
-        return gnode {_x+1, _y, _grid};
-    }
-
-    /// Return the node on the right (i.e. of the current calling node). if the
-    /// calling node is the last on the grid node, then grid::end() is returned;
-    /// if the calling node is already the one-past the row, then
-    /// _grid::end_of_row() is returned.
-    gnode
-    next_right() const noexcept
-    {
-        if ( this->is_end_of_row() ) {
-            if ( this->is_end_of_col() ) {
-                return _grid->end();
-            }
-            return _grid->end_of_row(this->_y);
-        }
-        return gnode{_x+1, _y, _grid};
-    }
-
-    gnode
-    next_up() const noexcept
-    {
-        if ( _y == 0 || _y == std::numeric_limits<std::size_t>::max() ) {
-            return _grid->before_start_of_col(this->_x);
-        }
-        return gnode{_x, _y+1, this};
-    }
-    */
 #ifdef DEBUG
-    void
-    dump() const noexcept
-    {
-        std::pair<T,T> vals = _grid->index2node_values(_x, _y);
-        std::cout<< "(" << vals.first << ", " << vals.second << ")";
-    }
-#endif
-
-private:
-    std::size_t              _x,    ///< index of x axis
-                             _y;    ///< index of y axis
-    const two_dim_grid<T,S>* _grid; ///< ptr to the actual grid
-
-    /*
-    bool
-    is_end_of_row() const noexcept { return _x >= _grid->x_pts(); }
-
-    bool
-    is_end_of_col() const noexcept { return _y >= _grid->y_pts(); }
-
-    gnode
-    next_on_right_colwise() const noexcept
-    {
-        gnode r {*this};
-        ++r._x;
-        return r;
-    }
-    
-    gnode
-    on_right_rowwise() const noexcept
-    {
-        gnode r {*this};
-        r._x += 1;
-        return r;
-    }
-    */
-};// class gnode
-
-}
-
 using ngpt::tick_axis;
-using ngpt::two_dim_grid;
 
 int main()
 {
@@ -383,150 +237,70 @@ int main()
     std::uniform_real_distribution<double> distr; // define the distribution
     std::cout << std::fixed << std::setfill('0') << std::setprecision(3);
 
-    std::cout<<"\nGrid:";
-    std::cout<<"\nX range -90 :   90 :  2.5";
-    std::cout<<"\nY range 180 : -180 : -5.0";
-    two_dim_grid<double, double> g{-90, 90, 2.5, 180, -180, -5};
-    std::uniform_real_distribution<double>::param_type new_range1 {-90, 90};
-    std::uniform_real_distribution<double>::param_type new_range2 {-180, 180};
-    ngpt::gnode<double, double> n;
-    double xi,yi;
-    for (int i=0; i<20; i++) {
-        distr.param(new_range1);
-        xi = distr(eng);
-        distr.param(new_range2);
-        yi = distr(eng);
-        n = g.nearest_neighbor(xi, yi);
-        std::cout<<"\nPoint ("<<xi<<", "<<yi<<") nearest neghr = ";
-        n.dump();
-        n = g.node_on_left(xi, yi);
-        std::cout<<" left node = ";
-        n.dump();
+    // construct a vector of tick axis to be tested
+    std::vector<tick_axis<double>> vecta;
+    vecta.emplace_back(-90, 90, 2.5);
+    vecta.emplace_back(-90, 90, -2.5);
+    vecta.emplace_back(180, -180, 5.0);
+    vecta.emplace_back(180, -180, -5.0);
+
+    for (auto& i : vecta) {
+        std::cout<<"\nChecking tick-axis from "<<i.start()<<" to "<<i.stop()
+            <<" with step "<<i.step();
+        if (i.validate()) {
+            std::cout<<"\n\tNumber of points (ticks) is: "<<i.num_pts();
+            // basic checking of indexes
+            assert( i(0) == i.start() );
+            assert( i(i.num_pts()-1) == i.stop() );
+            // check random numbers within the valid axis range
+            std::uniform_real_distribution<double>::param_type range {i.start(), i.stop()};
+            distr.param(range);
+            for (int j=0; j<10; ++j) {
+                // a random number
+                auto rand = distr(eng);
+                // check the nearest left tick & value
+                std::cout<<"\n\tNearest left tick index from "<<rand<<" is "
+                    <<i.index(rand)<<" with value "<<i.operator()(i.index(rand));
+                assert( std::abs(i.operator()(i.index(rand))-rand)
+                    <std::abs(i.step()) );
+                // check the nearest neighbor
+                std::cout<<"\n\tNearest tick index from value "<<rand<<" is "
+                    <<i.nearest_neighbor(rand)<<" with value "<<i.operator()(i.nearest_neighbor(rand));
+                assert( std::abs(i.operator()(i.nearest_neighbor(rand))-rand)
+                    <std::abs(i.step()/2) );
+            }
+            // check limits
+            std::vector<double> axis_limits;
+            axis_limits.push_back(i.start());
+            axis_limits.push_back(i.stop());
+            for (auto ll : axis_limits) {
+                std::cout<<"\n\tNearest left tick index from "<<ll<<" is "
+                    <<i.index(ll)<<" with value "<<i.operator()(i.index(ll));
+                std::cout<<"\n\tNearest tick index from value "<<ll<<" is "
+                    <<i.nearest_neighbor(ll)<<" with value "<<i.operator()(i.nearest_neighbor(ll));
+            }
+            // check outside limits
+            if (i.is_ascending()) {
+                axis_limits[0] -= i.step();
+                axis_limits[1] += i.step();
+            } else {
+                axis_limits[0] += i.step()*-1.0;
+                axis_limits[1] -= i.step()*-1.0;
+            }
+            for (auto ll : axis_limits) {
+                std::cout<<"\n\tNearest left tick index from "<<ll<<" is "
+                    <<i.index(ll)<<" with value "<<i.operator()(i.index(ll));
+                std::cout<<"\n\tNearest tick index from value "<<ll<<" is "
+                    <<i.nearest_neighbor(ll)<<" with value "<<i.operator()(i.nearest_neighbor(ll));
+            }
+        } else {
+            std::cout<<"\n\tTick-axis is **NOT** valid!";
+        }
     }
     
-    /*
-    std::cout<<"\nGrid from -90 to 90, with step = -5. (INVALID!)";
-    tick_axis<double> te1(-90, 90, -5);
-    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te1.validate();
-    std::cout<<"\nGrid from 90 to -90, with step = 5. (INVALID!)";
-    tick_axis<double> te2(90, -90, 5);
-    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te2.validate();
-    std::cout<<"\nGrid from 90 to 180, with step = -5. (INVALID!)";
-    tick_axis<double> te3(90, 180, -5);
-    std::cout<<"\n\tGrid is valid? "<< std::boolalpha << te3.validate();
-
-    std::cout<<"\nGrid from -90 to 90, with step = 5.";
-    tick_axis<double> t1(-90, 90, 5);
-    std::cout<<"\n\tAxis is ascending?"<< std::boolalpha << t1.is_ascending();
-    std::cout<<"\n\tNum of points:    "<<t1.num_pts();
-    for (auto i = 0; i < t1.num_pts(); i++) {
-        std::cout<<"\n\tt1["<<i<<"] = " <<t1(i);
-    }
-    // set the range for the random generator
-    std::uniform_real_distribution<double>::param_type new_range1 {-90, 90};
-    distr.param(new_range1);
-    for (int i=0; i<10; ++i) {
-        t = distr(eng);
-        std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t1.index(t)
-        <<" which is node: " <<t1.val_at_index(t1.index(t))
-        <<" distance from node=" <<std::abs(t1.val_at_index(t1.index(t))-t)
-        <<" nearest node: "<<t1.nearest_neighbor(t)<<" ("<<t1.val_at_index(t1.nearest_neighbor(t))<<")";
-    }
-    t = -90e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t1.index(t)
-    <<" which is node: " <<t1.val_at_index(t1.index(t))
-    <<" distance from node=" <<std::abs(t1.val_at_index(t1.index(t))-t)
-    <<" nearest node: "<<t1.nearest_neighbor(t)<<" ("<<t1.val_at_index(t1.nearest_neighbor(t))<<")";
-    t = 90e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t1.index(t)
-    <<" which is node: " <<t1.val_at_index(t1.index(t))
-    <<" distance from node=" <<std::abs(t1.val_at_index(t1.index(t))-t)
-    <<" nearest node: "<<t1.nearest_neighbor(t)<<" ("<<t1.val_at_index(t1.nearest_neighbor(t))<<")";
-
-    std::cout<<"\nGrid from 0 to 180, with step = 5.";
-    tick_axis<double> t2(0, 180, 5);
-    std::cout<<"\n\tAxis is ascending?"<< std::boolalpha << t2.is_ascending();
-    std::cout<<"\n\tNum of points: "<<t2.num_pts();
-    // set the range for the random generator
-    std::uniform_real_distribution<double>::param_type new_range2 {0, 180};
-    distr.param(new_range2);
-    for (int i=0; i<10; ++i) {
-        t = distr(eng);
-        std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t2.index(t)
-        <<" which is node: " <<t2.val_at_index(t2.index(t))
-        <<" distance from node=" <<std::abs(t2.val_at_index(t2.index(t))-t)
-        <<" nearest node: "<<t2.nearest_neighbor(t)<<" ("<<t2.val_at_index(t2.nearest_neighbor(t))<<")";
-    }
-    t = 0e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t2.index(t)
-    <<" which is node: " <<t2.val_at_index(t2.index(t))
-    <<" distance from node=" <<std::abs(t2.val_at_index(t2.index(t))-t)
-    <<" nearest node: "<<t2.nearest_neighbor(t)<<" ("<<t2.val_at_index(t2.nearest_neighbor(t))<<")";
-    t = 180e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t2.index(t)
-    <<" which is node: " <<t2.val_at_index(t2.index(t))
-    <<" distance from node=" <<std::abs(t2.val_at_index(t2.index(t))-t)
-    <<" nearest node: "<<t2.nearest_neighbor(t)<<" ("<<t2.val_at_index(t2.nearest_neighbor(t))<<")";
-    
-    std::cout<<"\nGrid from 180 to 0, with step = 5.";
-    tick_axis<double> t3(180, 0, -5);
-    std::cout<<"\n\tAxis is ascending?"<< std::boolalpha << t3.is_ascending();
-    std::cout<<"\n\tNum of points: "<<t3.num_pts();
-    // set the range for the random generator
-    std::uniform_real_distribution<double>::param_type new_range3 {0, 180};
-    distr.param(new_range3);
-    for (int i=0; i<10; ++i) {
-        t = distr(eng);
-        std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t3.index(t)
-        <<" which is node: " <<t3.val_at_index(t3.index(t))
-        <<" distance from node=" <<std::abs(t3.val_at_index(t3.index(t))-t)
-        <<" nearest node: "<<t3.nearest_neighbor(t)<<" ("<<t3.val_at_index(t3.nearest_neighbor(t))<<")";
-    }
-    t = 180e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t3.index(t)
-    <<" which is node: " <<t3.val_at_index(t3.index(t))
-    <<" distance from node=" <<std::abs(t3.val_at_index(t3.index(t))-t)
-    <<" nearest node: "<<t3.nearest_neighbor(t)<<" ("<<t3.val_at_index(t3.nearest_neighbor(t))<<")";
-    t = 0e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t3.index(t)
-    <<" which is node: " <<t3.val_at_index(t3.index(t))
-    <<" distance from node=" <<std::abs(t3.val_at_index(t3.index(t))-t)
-    <<" nearest node: "<<t3.nearest_neighbor(t)<<" ("<<t3.val_at_index(t3.nearest_neighbor(t))<<")";
-    
-    std::cout<<"\nGrid from 90 to -90, with step = 5.";
-    tick_axis<double> t4(90, -90, -5);
-    std::cout<<"\n\tAxis is ascending?"<< std::boolalpha << t4.is_ascending();
-    std::cout<<"\n\tNum of points: "<<t4.num_pts();
-    // set the range for the random generator
-    std::uniform_real_distribution<double>::param_type new_range4 {90, -90};
-    distr.param(new_range4);
-    for (int i=0; i<10; ++i) {
-        t = distr(eng);
-        std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t4.index(t)
-        <<" which is node: " <<t4.val_at_index(t4.index(t))
-        <<" distance from node=" <<std::abs(t4.val_at_index(t4.index(t))-t)
-        <<" nearest node: "<<t4.nearest_neighbor(t)<<" ("<<t4.val_at_index(t4.nearest_neighbor(t))<<")";
-    }
-    t = 90e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t4.index(t)
-    <<" which is node: " <<t4.val_at_index(t4.index(t))
-    <<" distance from node=" <<std::abs(t4.val_at_index(t4.index(t))-t)
-    <<" nearest node: "<<t4.nearest_neighbor(t)<<" ("<<t4.val_at_index(t4.nearest_neighbor(t))<<")";
-    t = -90e0;
-    std::cout<<"\n\tRanom Number "<<t<<" has index: "<<t4.index(t)
-    <<" which is node: " <<t4.val_at_index(t4.index(t))
-    <<" distance from node=" <<std::abs(t4.val_at_index(t4.index(t))-t)
-    <<" nearest node: "<<t4.nearest_neighbor(t)<<" ("<<t4.val_at_index(t4.nearest_neighbor(t))<<")";
-
-    float j = 90;
-    std::cout<<"\n";
-    for (int i=0; i<t4.num_pts(); i++) {
-        std::cout<<" " << j+i*t4.step();
-    }
-    */
-
     std::cout<<"\n";
     return 0;
 }
+#endif
 
 #endif
