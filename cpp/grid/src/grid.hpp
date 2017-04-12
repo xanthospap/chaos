@@ -3,13 +3,7 @@
 
 #include <cmath>
 #include <type_traits>
-
-#ifdef DEBUG
-#include <iostream>
-#include <iomanip>
-#include <random>
-#include <cassert>
-#endif
+#include <tuple>
 
 namespace ngpt
 {
@@ -23,7 +17,14 @@ namespace ngpt
 /// will be valid nodes (i.e. ticks).
 ///
 /// @tparam T the type of the axis, which can be any floating point type.
+/// 
+/// @warning  The class methods are designed not to validate (by default) if we
+///           are indeed operating within the valid axis range (no checks are
+///           performed on the input paramters). If the user wishes to check
+///           the validity of the input values/parameters, the method
+///           tick_axis::is_out_of_range could be used.
 ///
+/// @example  test_tick_axis.cc
 template<class T,
         typename = std::enable_if_t<std::is_floating_point<T>::value>
         >
@@ -41,6 +42,8 @@ public:
     /// @param[in] start The starting tick on the axis (inclusive).
     /// @param[in] stop  The ending tick on the axis (inclusive).
     /// @param[in] step  The step.
+    ///
+    /// @example         test_tick_axis.cc
     explicit
     tick_axis(T start, T stop, T step = T{1}) noexcept
     : _start{start},
@@ -54,6 +57,8 @@ public:
     /// @return True if the axis is setup correctly; false otherwise.
     ///
     /// @todo We should also check that (stop-start)%step == 0
+    ///
+    /// @example         test_tick_axis.cc
     bool
     validate() const noexcept
     { return static_cast<long>((_stop-_start)/_step) >= 0; }
@@ -81,6 +86,8 @@ public:
     /// @warning       Even if the input value falls outside the axis limits,
     ///                this function will compute and return a (maybe erroneus)
     ///                index. Check the value before feeding it to the function.
+    ///
+    /// @example       test_tick_axis.cc
     std::size_t
     index(T val) const noexcept 
     { return static_cast<std::size_t>((val-_start)/_step); }
@@ -94,11 +101,18 @@ public:
     /// @warning       Even if the input value falls outside the axis limits,
     ///                this function will compute and return a (maybe erroneus)
     ///                index. Check the value before feeding it to the function.
+    ///
+    /// @example       test_tick_axis.cc
     std::size_t
     nearest_neighbor(T val) const noexcept
     { return static_cast<std::size_t>(std::round((val-_start)/_step)); }
     
-    /// Given an index of a tick, return it's value.
+    /// Given an index of a tick, return it's value. A short example follows:
+    /// @code{.cpp}
+    ///   tick_axis<double> t {-90, 90, 5};
+    ///   assert( t(0) == t.start() );
+    ///   assert( t(t.num_pts()-1) == t.stop() );
+    /// @endcode
     ///
     /// @param[in] idx The index of a tick on the axis, for which we want its
     ///                actual value. 
@@ -107,14 +121,27 @@ public:
     /// @warning       No check is performed on the validity of the given index
     ///                (meaning it could be out of range). Even if the given
     ///                index is out of range, a value will be returned.
-    /// @code{.cpp}
-    ///   tick_axis<double> t {-90, 90, 5};
-    ///   assert( t(0) == t.start() );
-    ///   assert( t(t.num_pts()-1) == t.stop() );
-    /// @endcode
+    ///
+    /// @example       test_tick_axis.cc
     T
     operator()(std::size_t idx) const noexcept
     { return _start + idx * _step; }
+
+    /// Check if a value is out of range of the axis (i.e. out of range:
+    /// [start, stop]).
+    ///
+    /// @param[in] val Value for which to check validity.
+    /// @return        
+    ///                -  0 if value is in valid range
+    ///                - -1 if value is smaller than the minimum tick
+    ///                - +1 if value is larger than the largest tick
+    int
+    is_out_of_range(T val) const noexcept
+    {
+        if ( val > this->max_val() ) return 1;
+        if ( val < this->min_val() ) return -1;
+        return 0;
+    }
 
     /// Maximum value on the tick_axis (this may be **not** the rightmost value).
     T
@@ -225,82 +252,5 @@ private:
 }; // class grid2d
 
 } // namespace ngpt
-
-
-#ifdef DEBUG
-using ngpt::tick_axis;
-
-int main()
-{
-    std::random_device rd; // obtain a random number from hardware
-    std::mt19937 eng(rd()); // seed the generator
-    std::uniform_real_distribution<double> distr; // define the distribution
-    std::cout << std::fixed << std::setfill('0') << std::setprecision(3);
-
-    // construct a vector of tick axis to be tested
-    std::vector<tick_axis<double>> vecta;
-    vecta.emplace_back(-90, 90, 2.5);
-    vecta.emplace_back(-90, 90, -2.5);
-    vecta.emplace_back(180, -180, 5.0);
-    vecta.emplace_back(180, -180, -5.0);
-
-    for (auto& i : vecta) {
-        std::cout<<"\nChecking tick-axis from "<<i.start()<<" to "<<i.stop()
-            <<" with step "<<i.step();
-        if (i.validate()) {
-            std::cout<<"\n\tNumber of points (ticks) is: "<<i.num_pts();
-            // basic checking of indexes
-            assert( i(0) == i.start() );
-            assert( i(i.num_pts()-1) == i.stop() );
-            // check random numbers within the valid axis range
-            std::uniform_real_distribution<double>::param_type range {i.start(), i.stop()};
-            distr.param(range);
-            for (int j=0; j<10; ++j) {
-                // a random number
-                auto rand = distr(eng);
-                // check the nearest left tick & value
-                std::cout<<"\n\tNearest left tick index from "<<rand<<" is "
-                    <<i.index(rand)<<" with value "<<i.operator()(i.index(rand));
-                assert( std::abs(i.operator()(i.index(rand))-rand)
-                    <std::abs(i.step()) );
-                // check the nearest neighbor
-                std::cout<<"\n\tNearest tick index from value "<<rand<<" is "
-                    <<i.nearest_neighbor(rand)<<" with value "<<i.operator()(i.nearest_neighbor(rand));
-                assert( std::abs(i.operator()(i.nearest_neighbor(rand))-rand)
-                    <std::abs(i.step()/2) );
-            }
-            // check limits
-            std::vector<double> axis_limits;
-            axis_limits.push_back(i.start());
-            axis_limits.push_back(i.stop());
-            for (auto ll : axis_limits) {
-                std::cout<<"\n\tNearest left tick index from "<<ll<<" is "
-                    <<i.index(ll)<<" with value "<<i.operator()(i.index(ll));
-                std::cout<<"\n\tNearest tick index from value "<<ll<<" is "
-                    <<i.nearest_neighbor(ll)<<" with value "<<i.operator()(i.nearest_neighbor(ll));
-            }
-            // check outside limits
-            if (i.is_ascending()) {
-                axis_limits[0] -= i.step();
-                axis_limits[1] += i.step();
-            } else {
-                axis_limits[0] += i.step()*-1.0;
-                axis_limits[1] -= i.step()*-1.0;
-            }
-            for (auto ll : axis_limits) {
-                std::cout<<"\n\tNearest left tick index from "<<ll<<" is "
-                    <<i.index(ll)<<" with value "<<i.operator()(i.index(ll));
-                std::cout<<"\n\tNearest tick index from value "<<ll<<" is "
-                    <<i.nearest_neighbor(ll)<<" with value "<<i.operator()(i.nearest_neighbor(ll));
-            }
-        } else {
-            std::cout<<"\n\tTick-axis is **NOT** valid!";
-        }
-    }
-    
-    std::cout<<"\n";
-    return 0;
-}
-#endif
 
 #endif
