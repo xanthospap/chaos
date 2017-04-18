@@ -171,6 +171,25 @@ private:
       _step;  ///< the step size.
 }; // class tick_axis
 
+/// @class grid2d
+/// @brief A two-dimensional grid (no data).
+/// 
+/// A grid2d is a two-dimensional grid skeleton, i.e. a grid with no data. It
+/// consists of two axis (the x- and y-axis), which are tick_axis instances.
+/// As with tick_axis, grid2d has inclusive ranges, meaning that, e.g.
+/// constructing the grid: "grid2d g (-90, 90, 2.5, 0, 180, 5)", all of
+/// -90, 90, 0 and 180 are valid ticks (for the x- and y-axis respectively).
+/// @see tick_axis
+///
+/// @tparam T the type of the axis, which can be any floating point type.
+/// 
+/// @warning  The class methods are designed not to validate (by default) if we
+///           are indeed operating within the valid grid range (no checks are
+///           performed on the input paramters). If the user wishes to check
+///           the validity of the input values/parameters, the method
+///           tick_axis::is_out_of_range could be used.
+///
+/// @example  test_tick_axis.cc
 template<typename T>
     class grid2d
 {
@@ -205,8 +224,40 @@ public:
     validate() const noexcept
     { return _xaxis.validate() && _yaxis.validate(); }
 
+    /// Check if a value pair lies in the valid range of the grid, i.e. within
+    /// [x-axis-start, x-axis-stop] and [y-axis-start, y-axis-stop].
+    ///
+    /// @param[in] xval The value for the x-axis.
+    /// @param[in] yval The value for the y-axis.
+    /// @return         0 if the values fall in the valid range(s); if any other
+    ///                 integer is returned, the one or both of the values are
+    ///                 out of range.
+    ///
+    /// @see tick_axis::is_out_of_range
+    int
+    is_out_of_range(T&& xval, T&& yval) const noexcept
+    { 
+        return ( _xaxis.is_out_of_range(xval)
+              || _yaxis.is_out_of_range(yval) );
+    }
+    /// Check if a value pair lies in the valid range of the grid, i.e. within
+    /// [x-axis-start, x-axis-stop] and [y-axis-start, y-axis-stop].
+    ///
+    /// @param[in] xyvals A two-element tuple; first element is the x-axis
+    ///                   value, second is the y-axis value.
+    /// @return           0 if the values fall in the valid range(s); if any
+    ///                   other integer is returned, the one or both of the
+    ///                   values are out of range.
+    ///
+    /// @see tick_axis::is_out_of_range
+    int is_out_of_range(value_pair&& xyvals) const noexcept
+    {
+        return this->is_out_of_range(std::get<0>(xyvals), std::get<1>(xyvals));
+    }
+
     /// Transform an index_pair (i.e. a pair of x- and y-axis tick indexes) to
-    /// their respective values.
+    /// their respective values (i.e a value_pair, meaning the values at the
+    /// x- and y-axis tick indexes).
     ///
     /// @param[in] idx_pair The index pair; first element is the x-axis tick
     ///                     index, while the second element is the y-axis tick
@@ -216,7 +267,7 @@ public:
     /// @warning            No check is performed on the given indexes (i.e. if
     ///                     they indeed lie on the axis ranges).
     value_pair
-    idx_pair2val_pair(index_pair&& idx_pair) const noexcept
+    operator()(index_pair&& idx_pair) const noexcept
     {
         return value_pair{_xaxis(std::get<0>(idx_pair)),
                           _yaxis(std::get<1>(idx_pair))};
@@ -250,6 +301,23 @@ private:
     tick_axis<T> _xaxis,
                  _yaxis;
 }; // class grid2d
+
+/**
+ * There are a few ways to load/save the grid (values) in memory. I can think
+ * of four that can be of use. The first two are row-major:
+ *
+ * ROW-MAJOR START AT BOTTOM LEFT
+ *
+ *  +---+---+--...--+---+
+ *  |   |   |       |   |
+ *  +---+---+--...--+---+
+ *  |   |   |       |   |
+ *  .   .   .       .   .
+ *  .   .   .       .   .
+ *  |   |   |       |   |
+ *  +---+---+--...--+---+
+ *  |   |   |       |   |
+ *  +---+---+--...--+---+
 
 } // namespace ngpt
 
