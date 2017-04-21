@@ -216,6 +216,16 @@ public:
       _yaxis{ystart, ystop, ystep}
     {}
 
+    /// Return the number of ticks on the x-axis. Valid indexes span the range:
+    /// [0, num_pts()-1] or [0, num_pts()), i.e. the ticks are inclusive.
+    std::size_t
+    xpts() const noexcept { return _xaxis.num_pts(); }
+    
+    /// Return the number of ticks on the y-axis. Valid indexes span the range:
+    /// [0, num_pts()-1] or [0, num_pts()), i.e. the ticks are inclusive.
+    std::size_t
+    ypts() const noexcept { return _yaxis.num_pts(); }
+
     /// Validate that this grid2d is actualy valid (i.e. its parameters are
     /// set correctly). The function will return false if something is wrong.
     ///
@@ -318,6 +328,49 @@ private:
  *  +---+---+--...--+---+
  *  |   |   |       |   |
  *  +---+---+--...--+---+
+ */
+enum class grid_alloc_type
+{
+    rm_tl, ///< Row-Major, starting on top left corner
+    rm_bl  ///< Row-Major, starting on bottom left
+};
+
+template<grid_alloc_type T>
+    std::size_t
+    crd_pair2index(
+        std::tuple<std::size_t, std::size_t>&& t, std::size_t xpts, std::size_t ypts)
+    noexcept
+{}
+template<>
+    std::size_t
+    crd_pair2index<grid_alloc_type::rm_tl>
+        std::tuple<std::size_t, std::size_t>&& t, std::size_t xpts, std::size_t ypts)
+    noexcept
+{ return (ypts-std::get<1>(t)-1)*xpts+std::get<0>(t); }
+template<>
+    std::size_t
+    crd_pair2index<grid_alloc_type::rm_bl>
+        std::tuple<std::size_t, std::size_t>&& t, std::size_t xpts, std::size_t ypts)
+    noexcept
+{ return std::get<1>(t)*xpts+std::get<0>(t); }
+
+template<typename T, typename D, grid_alloc_type G>
+    class data_grid2d
+{
+public:
+    explicit
+    data_grid2d(T xstart, T xstop, T xstep, T ystart, T ystop, T ystep) noexcept
+    :_grid{xstart, xstop, xstep, ystart, ystop, ystep},
+     _xpts{_grid.xpts()},
+     _ypts{_grid.ypts()},
+     _data{nullptr}
+     {}
+private:
+    grid2d<T>   _grid;
+    std::size_t _xpts,
+                _ypts;
+    S*          _data;
+};
 
 } // namespace ngpt
 
