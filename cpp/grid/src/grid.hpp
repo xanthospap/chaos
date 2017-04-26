@@ -329,7 +329,7 @@ private:
  *  |   |   |       |   |
  *  +---+---+--...--+---+
  */
-enum class grid_alloc_type : char
+enum class grid_storage_type : char
 {
     rm_tl, ///< Row-Major, starting on top left corner
     rm_bl  ///< Row-Major, starting on bottom left
@@ -340,10 +340,10 @@ enum class grid_alloc_type : char
 ///
 /// @tparam T The tick-axis type(s), can be any floating point type.
 /// @tparam D The type of the (actual) data.
-/// @tparam G The order the data is allocated in (any of grid_alloc_type).
+/// @tparam G The order the data is allocated in (any of grid_storage_type).
 template<typename T,
          typename D,
-         grid_alloc_type G
+         grid_storage_type G
          >
     class data_grid2d
 {
@@ -379,6 +379,16 @@ public:
     xy_idx2d_idx(std::size_t xidx, std::size_t yidx) const noexcept
     { return idx_pair2index_impl(xidx, yidx, __is_bl()); }
 
+    /// Return the data array element corresponding to a given pair of x and
+    /// y tick indexes.
+    ///
+    /// @param[in] t A tuple of two elements; first is x-index, second is y-index.
+    /// @return      (reference to) the data array element corresponding to the
+    ///              given (x,y) index pair.
+    /// @warning     The function will not check the validity of either x or
+    ///              y index. It will return a result even if they do not lie
+    ///              within the valid ranges, which can be an invalid memory
+    ///              address.
     D&
     at(std::tuple<std::size_t, std::size_t>&& t) noexcept
     { return _data[this->xy_idx2d_idx(t)]; }
@@ -388,19 +398,19 @@ public:
     { return _data[this->xy_idx2d_idx(xidx, yidx)]; }
 
 private:
-    /// A static constant of type grid_alloc_type::rm_bl
-    typedef std::integral_constant<grid_alloc_type,
-                                   grid_alloc_type::rm_bl> __bl;
-    /// A static constant of type grid_alloc_type::G (i.e. allocation type
+    /// A static constant of type grid_storage_type::rm_bl
+    typedef std::integral_constant<grid_storage_type,
+                                   grid_storage_type::rm_bl> __bl;
+    /// A static constant of type grid_storage_type::G (i.e. allocation type
     /// of instatiation).
-    typedef std::integral_constant<grid_alloc_type,
+    typedef std::integral_constant<grid_storage_type,
                                    G> __gt;
-    /// std::true_type if (this) allocation type is grid_alloc_type::rm_bl
+    /// std::true_type if (this) allocation type is grid_storage_type::rm_bl
     using __is_bl = std::is_same<__bl,
                                  __gt>;
 
     /// (Implementation) Convert a pair of x and y indexes to the corresponding
-    /// data array index, when the allocation type is grid_alloc_type::rm_bl.
+    /// data array index, when the allocation type is grid_storage_type::rm_bl.
     /// This is a (partial) specialization for the method xy_idx2d_idx.
     ///
     /// @param[in] t A tuple of two elements; first is x-index, second is y-index.
@@ -410,12 +420,12 @@ private:
     ///              within the valid ranges.
     /// @see xy_idx2d_idx
     std::size_t
-    idx_pair2index_impl(std::tuple<std::size_t, std::size_t>&& t, std::true_type)
+    idx_pair2index_impl(const std::tuple<std::size_t, std::size_t>& t, std::true_type)
     const noexcept
     { return std::get<1>(t)*_xpts+std::get<0>(t); }
     
     /// (Implementation) Convert a pair of x and y indexes to the corresponding
-    /// data array index, when the allocation type is grid_alloc_type::rm_bl.
+    /// data array index, when the allocation type is grid_storage_type::rm_bl.
     /// This is a (partial) specialization for the method xy_idx2d_idx.
     ///
     /// @param[in] xidx The x index value. 
@@ -431,7 +441,7 @@ private:
     { return yidx*_xpts+xidx; }
     
     /// (Implementation) Convert a pair of x and y indexes to the corresponding
-    /// data array index, when the allocation type is grid_alloc_type::rm_tl.
+    /// data array index, when the allocation type is grid_storage_type::rm_tl.
     /// This is a (partial) specialization for the method xy_idx2d_idx.
     ///
     /// @param[in] t A tuple of two elements; first is x-index, second is y-index.
@@ -441,12 +451,12 @@ private:
     ///              within the valid ranges.
     /// @see xy_idx2d_idx
     std::size_t
-    idx_pair2index_impl(std::tuple<std::size_t, std::size_t>&& t, std::false_type)
+    idx_pair2index_impl(const std::tuple<std::size_t, std::size_t>& t, std::false_type)
     const noexcept
     { return (_ypts-std::get<1>(t)-1)*_xpts+std::get<0>(t); }
     
     /// (Implementation) Convert a pair of x and y indexes to the corresponding
-    /// data array index, when the allocation type is grid_alloc_type::rm_tl.
+    /// data array index, when the allocation type is grid_storage_type::rm_tl.
     /// This is a (partial) specialization for the method xy_idx2d_idx.
     ///
     /// @param[in] xidx The x index value. 
