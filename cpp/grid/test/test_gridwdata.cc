@@ -39,6 +39,28 @@ int main()
     end = std::chrono::steady_clock::now();
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count();
 
+    std::size_t num_pts = g.num_pts();
+    double* data = new double[num_pts];
+    for (auto i=0; i<num_pts; i++) data[i] = dis(gen);
+    g.data() = data;
+    int not_i = 0;
+    begin = std::chrono::steady_clock::now();
+    for (int i=0; i<10000; i++) {
+        auto x = dis(gen);
+        auto y = dis(gen);
+        if (!g.is_out_of_range(x, y)) {
+            g.interpolate(x,y);
+        } else {
+            // std::cout<<"\nValue pair: ("<<x<<", "<<y<<") out of rage!";
+            ++not_i;
+        }
+    }
+    end = std::chrono::steady_clock::now();
+    std::cout<<"\nNumber of interpolations: "<<10000-not_i;
+    std::cout <<"\nTime difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count();
+
+    delete[] data;
+
     std::cout<<"\n";
     return 0;
 }

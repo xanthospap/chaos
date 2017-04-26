@@ -76,6 +76,14 @@ template<typename T, Enum E>
 public:
     D(T i):j{i}{}
     T bar(T k) noexcept { return bar_impl(k, enum_type()); }
+    int baz()
+    {
+        if (enum_type()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 private:
     typedef std::integral_constant<Enum, Enum::e1> e_e1;
     typedef std::integral_constant<Enum, Enum::e2> e_e2;
@@ -111,6 +119,8 @@ int main()
     D<int, Enum::e2> d2(0);
     std::cout<<"\tD: "<<d1.bar(0)<<"\n";
     std::cout<<"\tD: "<<d2.bar(0)<<"\n";
+    std::cout<<"\tD: "<<d1.baz()<<"\n";
+    std::cout<<"\tD: "<<d2.baz()<<"\n";
     
     return 0;
 }

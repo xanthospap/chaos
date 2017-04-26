@@ -245,7 +245,7 @@ public:
     ///
     /// @see tick_axis::is_out_of_range
     int
-    is_out_of_range(T&& xval, T&& yval) const noexcept
+    is_out_of_range(T xval, T yval) const noexcept
     { 
         return ( _xaxis.is_out_of_range(xval)
               || _yaxis.is_out_of_range(yval) );
@@ -260,7 +260,7 @@ public:
     ///                   values are out of range.
     ///
     /// @see tick_axis::is_out_of_range
-    int is_out_of_range(value_pair&& xyvals) const noexcept
+    int is_out_of_range(const value_pair& xyvals) const noexcept
     {
         return this->is_out_of_range(std::get<0>(xyvals), std::get<1>(xyvals));
     }
@@ -277,7 +277,7 @@ public:
     /// @warning            No check is performed on the given indexes (i.e. if
     ///                     they indeed lie on the axis ranges).
     value_pair
-    operator()(index_pair&& idx_pair) const noexcept
+    operator()(const index_pair& idx_pair) const noexcept
     {
         return value_pair{_xaxis(std::get<0>(idx_pair)),
                           _yaxis(std::get<1>(idx_pair))};
@@ -306,6 +306,30 @@ public:
     {
         return index_pair{_xaxis.index(xval), _yaxis.index(yval)};
     }
+
+    /// The (value) of the starting (i.e. leftmost) tick on x-axis.
+    T
+    x_start() const noexcept { return _xaxis.start(); }
+    
+    /// The (value) of the ending (i.e. rightmost) tick on x-axis.
+    T
+    x_stop() const noexcept { return _xaxis.stop(); }
+    
+    /// The step value of the x-axis.
+    T
+    x_step() const noexcept { return _xaxis.step(); }
+    
+    /// The (value) of the starting (i.e. leftmost) tick on y-axis.
+    T
+    y_start() const noexcept { return _yaxis.start(); }
+    
+    /// The (value) of the ending (i.e. rightmost) tick on y-axis.
+    T
+    y_stop() const noexcept { return _yaxis.stop(); }
+    
+    /// The step value of the x-axis.
+    T
+    y_step() const noexcept { return _yaxis.step(); }
 
 private:
     tick_axis<T> _xaxis,
@@ -393,9 +417,108 @@ public:
     at(std::tuple<std::size_t, std::size_t>&& t) noexcept
     { return _data[this->xy_idx2d_idx(t)]; }
     
+    /// Return the data array element corresponding to a given pair of x and
+    /// y tick indexes.
+    ///
+    /// @param[in] xidx The x index value. 
+    /// @param[in] yidx The y index value. 
+    /// @return         (reference to) the data array element corresponding to
+    ///                 the given (x,y) index pair.
+    /// @warning        The function will not check the validity of either x or
+    ///                 y index. It will return a result even if they do not lie
+    ///                 within the valid ranges, which can be an invalid memory
+    ///                 address.
     D&
     at(std::size_t xidx, std::size_t yidx) noexcept
     { return _data[this->xy_idx2d_idx(xidx, yidx)]; }
+
+    /// Bilinear interpolation at the given x, y point.
+    D
+    interpolate(T x, T y) const
+    {
+        // bottom left node; x and y indexes
+        auto bl_idx  = _grid.bottom_left(x, y);
+        auto x_start = std::get<0>(bl_idx);
+        auto y_start = std::get<1>(bl_idx);
+
+        // Get the right cell (indexes) depending on the bottom left node.
+        //
+        //       case A (normal)
+        // +---o---o--...--o-x-o case B (y_start = _ypts-1)
+        // |   | x |       |   |
+        // +---o---o--...--o---o
+        // |   |   |       |   |
+        // +---+---+--...--o---o
+        // |   |   |       |   x case C (x_start = _xpts-1)
+        // +---+---+--...--o---o
+        // |   |   |       |   |
+        // +---+---+--...--+---+
+        //
+        std::size_t x_left,
+                    x_right,
+                    y_bottom,
+                    y_top;
+        // left x index is starting one, except if x_start is the ending tick
+        // (see case C)
+        x_left  = (x_start == _xpts-1) ? (x_start-1) : (x_start);
+        x_right = x_left+1;
+        // same for y (see case B)
+        y_bottom  = (y_start == _ypts-1) ? (y_start-1) : (y_start);
+        y_top     = y_bottom+1;
+
+        // find the data indexes and corresponding data values for the cell
+        // a   b
+        // +---+
+        // |   |
+        // +---+ c
+        // idx
+        std::size_t idx = this->xy_idx2d_idx(x_left, y_bottom);
+        D fa, fb, fc, fd;
+        if ( __is_bl() ) {
+            fa = _data[idx+_xpts];   // a or q12
+            fb = _data[idx+_xpts+1]; // b or q22
+            fc = _data[idx+1];       // c or q21
+            fd = _data[idx];            //      q11
+        } else {
+            fa = _data[idx-_xpts];    // a
+            fb = _data[idx-_xpts+1];  // b
+            fc = _data[idx+1];        // c
+            fd = _data[idx];
+        }
+
+        // The values at the tick indexes
+        D x0 {static_cast<D>(_grid.x_start()+_grid.x_step()*x_left)},
+          x1 {static_cast<D>(_grid.x_start()+_grid.x_step()*x_right)},
+          y0 {static_cast<D>(_grid.y_start()+_grid.y_step()*y_bottom)},
+          y1 {static_cast<D>(_grid.y_start()+_grid.y_step()*y_top)};
+
+        // Perform bilinear interpolation
+        D f_xy1 { ((x1-x)/(x1-x0))*fd + ((x-x0)/(x1-x0))*fc },
+          f_xy2 { ((x1-x)/(x1-x0))*fa + ((x-x0)/(x1-x0))*fb };
+        return ((y1-y)/(y1-y0))*f_xy1 + ((y-y0)/(y1-y0))*f_xy2;
+    }
+
+    /// Total number of data points.
+    std::size_t
+    num_pts() const noexcept { return _xpts * _ypts; }
+    
+    /// Check if a value pair lies in the valid range of the grid, i.e. within
+    /// [x-axis-start, x-axis-stop] and [y-axis-start, y-axis-stop].
+    ///
+    /// @param[in] xval The value for the x-axis.
+    /// @param[in] yval The value for the y-axis.
+    /// @return         0 if the values fall in the valid range(s); if any other
+    ///                 integer is returned, the one or both of the values are
+    ///                 out of range.
+    ///
+    /// @see grid_2d::is_out_of_range
+    int
+    is_out_of_range(T&& xval, T&& yval) const noexcept
+    { return _grid.is_out_of_range(xval, yval); }
+
+    /// @todo kinda dangerous ....
+    D*&
+    data() noexcept {return _data;}
 
 private:
     /// A static constant of type grid_storage_type::rm_bl
