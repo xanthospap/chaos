@@ -99,51 +99,95 @@ noexcept
     }
 }
 
-void
-pa_update(double *__restrict__ A, const double *__restrict__ u, double b, int rows, int cols)
+double
+house(const double* x, int n, double* u)
 {
-    int m {rows},
-        n {cols};
+    // ptr to the new householder vector
+    *u = 1.0e0;
 
-    // w <- A^Tu
-    double w[cols];
-    for (int j = 0; j < n; j++) {
-         w[j] = 0e0;
-         for (int i = 0; i < m; i++) {
-             w[j] += A[j*m+i]*u[i];
-         }
+    double sigma = 0e0;
+    for (int i = 1; i < n; ++i) {
+        sigma += x[i] * x[i];
+        u[i]   = x[i];
     }
 
-    // A <- A-uw^T
-    for (int j = 0; j < n; j++) {
-        for (int i = 0; i < m; i++) {
-            A[j*m+i] += w[j]*u[i];
+    double beta = 0e0;
+    if ( sigma == 0e0 ) {
+        beta = 0e0;
+    } else {
+        double mi = std::sqrt(x[0]*x[0]+sigma);
+        if ( x[0]<= 0e0 ) {
+            u[0] = x[0] - mi;
+        } else {
+            u[0] = -1e0 * sigma / (x[0] + mi);
         }
+        beta = 2e0*u[0]*u[0] / (sigma+u[0]*u[0]);
     }
-     
-    
+
+    double tmp = *u;
+    for (int i = 1; i < n; ++i) u[i] /= tmp;
+
+    return beta;
 }
 
 void
-householder_qr()
+householder_qr(double* A, int rows, int cols)
 {
+    double u[rows], C[rows*cols];
+    int    ROWS = rows,
+           COLS = cols;
+    double b;
+
     // for j = 1:n i.e. for every column
-    for (col = 0;  col < n; col++) {
+    for (int j = 0;  j < COLS; j++) {
         // u, b = house( A(j:m,j) )
         // j-th column of A, from row j to end:
         // j-th column of A is:        A[j*m]
         // j-th column at j-th row is: A[j*m+j]
         // A(j:m, j) is a vector with rows = m-j
-        b = house(A[j*m+j], u, j);
+        b = house(&A[j*ROWS+j], j, u);
         // A(j:m, j:n) is a submatrix;
         // Number of rows:    m-j
         // Number of columns: n-j
-
-    
+        for (int col = j; col < COLS; col++) {
+            for (int row = j; row < ROWS; row++) {
+                C[(col-j)*ROWS+row-j] = 0e0;
+                for (int k = 0; k < ROWS-j; k++) {
+                    C[(col-j)*ROWS+row-j] += u[row-j]*u[k]*A[col*ROWS+k+j];
+                }
+            }
+        }
+        for (int col = 0; col < COLS-j; col++) {
+            for (int row = 0; row < ROWS-j; row++) {
+                A[(col+j)*ROWS+(row+j)] = C[col*ROWS+row];
+            }
+        }
+    }
+    return;
 }
 
 int main()
 {
+    /*
+    int ROWS = 4;
+    int COLS = 3;
+    for (int j = 0; j<COLS; j++) {
+        printf("Column: %1d\n", j);
+        printf("\thouse of A(%1d:%1d,%1d)\n",j, ROWS, j);
+        printf("\tSubmatrix A(%1d:%1d,%1d:%1d)\n", j, ROWS, j, COLS);
+        for (int col = j; col < COLS; col++) {
+            for (int row = j; row < ROWS; row++) {
+                printf("\n\tC(%1d,%1d) = C[%2d] = ", row-j, col-j, (col-j)*ROWS+row-j);
+                for (int k=0; k<ROWS-j;k++) {
+                    printf("+u(%1d)*u(%1d)*A(%1d,%1d)", row-j, k, k+j, col);
+                }
+                printf("\n\tA(%1d,%1d) = A[%2d]\n", row, col, col*ROWS+row);
+            }
+        }
+    }
+    */
+
+    /*
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_real_distribution<double> distr(-25e0, 25e0); // define the range
@@ -207,6 +251,17 @@ int main()
     printf("\ny <- A^Tx:\n");
     gatx(A, x, y, cols, rows);
     for (int  i=0; i<cols; i++) printf("%+15.10f ", y[i]);
+    */
+
+    int ROWS = 4, COLS = 3;
+    double A[] = {1.0e0,4.0e0,7.0e0,10.0e0, 2.0e0,2.0e0,8.0e0,1.0e0, 11.0e0,6.0e0,6.0e0,5.0e0};
+    householder_qr(A, ROWS, COLS);
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }
 
     printf("\n");
     return 0;
