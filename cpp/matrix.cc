@@ -144,17 +144,29 @@ householder_qr(double* A, int rows, int cols)
             for (int row = j; row < ROWS; row++) {
                 C[(col-j)*ROWS+row-j] = 0e0;
                 for (int k = 0; k < ROWS-j; k++) {
-                    C[(col-j)*ROWS+row-j] += u[row-j]*u[k]*A[col*ROWS+k+j];
-                }
-                C[(col-j)*ROWS+row-j] *= (-1e0 * b);
+                    C[(col-j)*ROWS+row-j] -= u[row-j]*u[k]*A[col*ROWS+k+j];
+               }
+                C[(col-j)*ROWS+row-j] *= b;
                 C[(col-j)*ROWS+row-j] += A[col*ROWS+row];
             }
         }
         for (int col = 0; col < COLS-j; col++) {
             for (int row = 0; row < ROWS-j; row++) {
-                A[(col+j)*ROWS+(row+j)] = -C[col*ROWS+row];
+                A[(col+j)*ROWS+(row+j)] = C[col*ROWS+row];
             }
         }
+        if (j < ROWS-1) {
+            for (int row = j+1; row < ROWS; row++) {
+                A[j*ROWS+row] = u[row-j];
+            }
+        }
+    /*printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }*/
     }
     return;
 }
