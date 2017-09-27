@@ -160,15 +160,39 @@ householder_qr(double* A, int rows, int cols)
                 A[j*ROWS+row] = u[row-j];
             }
         }
-    /*printf("\nMatrix A:\n");
-    for (int i=0; i<ROWS; i++) {
-        for (int j=0; j<COLS; j++) {
-            printf("%+15.10f ",A[j*ROWS+i]);
-        }
-        printf("\n");
-    }*/
     }
     return;
+}
+
+void qrdcmp(double *a, int n, int &sign)
+{
+    int i,j,k;
+    double scale, sigma, sum, tau;
+    double d[n*n], c[n*n];
+
+    sign = 0;
+    for (k=0;k<n-1;k++) {
+        scale =0e0;
+        for (i=k;i<n;i++) scale=std::max(scale,std::abs(a[i*n+j]));
+        if (scale == 0e0) {
+            sign = 1;
+            c[k] = d[k] = 0e0;
+        } else {
+            for (i=k;i<n;i++) a[i*n+k] /= scale;
+            for (sum=0.0,i=k;i<n;i++) sum += (a[i*n+k]*a[i*n+k]);
+            sigma = std::copysign(std::sqrt(sum),a[k*n+k]);
+            a[k*n+k] += sigma;
+            c[k]=sigma*a[k*n+k];
+            d[k] = -scale*sigma;
+            for (j=k+1;j<n;j++) {
+                for (sum=0.0,i=k;i<n;i++) sum += a[i*n+k]*a[i*n+j];
+                tau=sum/c[k];
+                for (i=k;i<n;i++) a[i*n+j] -= tau*a[i*n+k];
+            }
+        }
+    }
+    d[n-1] = a[(n-1)*n+n-1];
+    if (d[n-1] == 0e0) sign = 1;
 }
 
 int main()
@@ -261,8 +285,8 @@ int main()
     int ROWS = 4, COLS = 3;
     double A[] = {1.0e0,  4.0e0,  7.0e0,
                  10.0e0,  2.0e0,  2.0e0,
-                  8.0e0,  1.0e0, 11.0e0,
-                  6.0e0,  6.0e0,  5.0e0};
+                  8.0e0,  1.0e0, 11.0e0};
+    //              6.0e0,  6.0e0,  5.0e0};
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
         for (int j=0; j<COLS; j++) {
@@ -271,6 +295,18 @@ int main()
         printf("\n");
     }
 
+    ROWS = 3;
+    COLS = 3;
+    qrdcmp(A, ROWS, COLS);
+    printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+
+    /*
     householder_qr(A, ROWS, COLS);
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
@@ -279,6 +315,7 @@ int main()
         }
         printf("\n");
     }
+    */
 
     printf("\n");
     return 0;
