@@ -125,7 +125,7 @@ house(const double* x, int n, double* u)
     }
 
     double tmp = *u;
-    for (int i = 1; i < n; ++i) u[i] /= tmp;
+    for (int i = 0; i < n; ++i) u[i] /= tmp;
 
     return beta;
 }
@@ -138,28 +138,21 @@ householder_qr(double* A, int rows, int cols)
            COLS = cols;
     double b;
 
-    // for j = 1:n i.e. for every column
     for (int j = 0;  j < COLS; j++) {
-        // u, b = house( A(j:m,j) )
-        // j-th column of A, from row j to end:
-        // j-th column of A is:        A[j*m]
-        // j-th column at j-th row is: A[j*m+j]
-        // A(j:m, j) is a vector with rows = m-j
-        b = house(&A[j*ROWS+j], j, u);
-        // A(j:m, j:n) is a submatrix;
-        // Number of rows:    m-j
-        // Number of columns: n-j
+        b = house(&A[j*ROWS+j], ROWS-j, u);
         for (int col = j; col < COLS; col++) {
             for (int row = j; row < ROWS; row++) {
                 C[(col-j)*ROWS+row-j] = 0e0;
                 for (int k = 0; k < ROWS-j; k++) {
                     C[(col-j)*ROWS+row-j] += u[row-j]*u[k]*A[col*ROWS+k+j];
                 }
+                C[(col-j)*ROWS+row-j] *= (-1e0 * b);
+                C[(col-j)*ROWS+row-j] += A[col*ROWS+row];
             }
         }
         for (int col = 0; col < COLS-j; col++) {
             for (int row = 0; row < ROWS-j; row++) {
-                A[(col+j)*ROWS+(row+j)] = C[col*ROWS+row];
+                A[(col+j)*ROWS+(row+j)] = -C[col*ROWS+row];
             }
         }
     }
@@ -254,8 +247,20 @@ int main()
     */
 
     int ROWS = 4, COLS = 3;
-    double A[] = {1.0e0,4.0e0,7.0e0,10.0e0, 2.0e0,2.0e0,8.0e0,1.0e0, 11.0e0,6.0e0,6.0e0,5.0e0};
+    double A[] = {1.0e0,  4.0e0,  7.0e0,
+                 10.0e0,  2.0e0,  2.0e0,
+                  8.0e0,  1.0e0, 11.0e0,
+                  6.0e0,  6.0e0,  5.0e0};
+    printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+
     householder_qr(A, ROWS, COLS);
+    printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
         for (int j=0; j<COLS; j++) {
             printf("%+15.10f ",A[j*ROWS+i]);
