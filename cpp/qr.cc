@@ -1,137 +1,50 @@
+#include <cmath>
+#ifdef DEBUG
 #include <iostream>
 #include <cassert>
-#include <cmath>
+#include <chrono>
+#include <iostream>
+#include <random>
+#endif
 
-/// WARNING
-/// ---------------------------------------------
-/// * All matrix/vector indexes start from 0.
-/// * All matrix/vector are stored column-wise
+/// \brief This file contains algorithms connected to QR factorization.
+///
+/// \notes
+///     - All matrix/vector indexes start from 0.
+///     - All matrix/vector are stored column-wise
 ///
 
-/// TODO
-/// * operator new should be in a try/catch block
+/// \brief Compute Householder vector.
 ///
-
-struct submat;
-
-struct mat
-{
-    double*     _dptr;
-    std::size_t _rows,
-                _cols,
-                _srows, // only for submatrices; real number of rows
-                _scols; // only for submatrices; real number of cols
-
-    explicit mat(double* p = nullptr, std::size_t r = 0, std::size_t c = 0,
-        std::size_t sr = 0, std::size_t sc = 0)
-    : _dptr(p), _rows(r), _cols(c), _srows(sr), _scols(sc)
-    {}
-
-    double&
-    operator()(std::size_t r, std::size_t c)
-    {
-        assert( c*_rows+r < _rows * _cols );
-        return _dptr[c*_rows+r];
-    }
-
-    double
-    operator()(std::size_t r, std::size_t c) const
-    {
-        assert( c*_rows+r < _rows * _cols );
-        return _dptr[c*_rows+r];
-    }
-
-    mat
-    submatrix(std::size_t row1, std::size_t row2, std::size_t col1, std::size_t col2)
-    {
-        assert( (row2 >= row1) && (row2 <= this->_rows) );
-        assert( (col2 >= col1) && (col2 <= this->_cols) );
-
-        std::size_t nr { (row2 == row1) ? 1 : (row2-row1) };
-        std::size_t nc { (col2 == col1) ? 1 : (col2-col1) };
-
-        std::cout<<"\n\tSubMatrix info: rows: "<< nr <<", cols: "<< nc <<"\n";
-        
-        return mat{&(this->operator()(row1, col1)), _rows, _cols, nr, nc};
-    }
-
-    void
-    dump() const
-    {
-        std::size_t real_rows = _srows ? _srows : _rows;
-        std::size_t real_cols = _scols ? _scols : _cols;
-        
-        for (std::size_t i = 0; i < real_rows; ++i)
-        {
-            for (std::size_t j = 0; j < real_cols; ++j)
-            {
-                std::cout<< " " << this->operator()(i, j);
-            }
-            std::cout<<"\n";
-        }
-    }
-};
-
-
-int main()
-{
-    std::size_t ROWS{5}, COLS{4};
-    double* nums = new double[ROWS*COLS];
-    double num{0};
-
-    for (std::size_t r=0;r<ROWS;++r)
-        for (std::size_t c=0;c<COLS;++c)
-            nums[r*COLS+c] = num++;
-
-    mat m{nums, ROWS, COLS};
-    std::cout<<"\nOriginal matrix size: "<<m._rows<<"x"<<m._cols<<"\n";
-    m.dump();
-
-    std::cout<<"Submatrix A(3:, 2:) is:\n";
-    auto m1 = m.submatrix(3, ROWS, 2, COLS);
-    m1.dump();
-    
-    std::cout<<"Submatrix A(3:, 2) is:\n";
-    m1 = m.submatrix(3, ROWS, 2, 2);
-    m1.dump();
-    
-    std::cout<<"Submatrix A(1:4, 1) is:\n";
-    m1 = m.submatrix(1, 4, 1, 1);
-    m1.dump();
-
-    return 0;
-}
-
+/// Given vector x of size n, this function computes vector u (of size n), with
+/// u(0) = 1 and b (scalar), such that P = I_n - buu^T is orthogonal and
+/// Px = |x|e_1
 ///
-/// \brief Householder Vector
+/// \parameter[in]  x     Input vector of size >= n.
+/// \parameter[in]  n     Size of vectors x and u. Only their first n elements
+///                       are considered (i.e. both x and u are considered n-sized).
+/// \parameter[out] u     Vector of size >= n; at output it contains the result
+///                       vector u. Only its first n elements are read/written.
+/// \return               beta (i.e. b).
 ///
-/// Given the vector x (of dimension n), this function computes the vector u 
-/// (of dimension n) with u(1) = 1.0 and b (scalar) such that P = I_n - b*u*u^T
-/// is orthogonal and Px = norm(x)e_1
+/// \note A production version of this algorithm, may involve a preliminary
+///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
+///       scale x to x <- x / |x|.
 ///
-/// Reference: Van Golub, Matrix Computations, p. 210, Algorithm 5.1.1
-///
-/// Modifications:
-/// Instead of giving the vector x, we pass in the A matrix (of dimensions nxm),
-/// of wich x is the col^th column.
-///
-/// \param[out] u    The Householder vector; the array should have a size of
-///                  >= n (the function will overwrite u[0:n)).
-/// \return          The scalar b (see description).
-///
+/// \ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 210
 double
-householder_vector(const double* x, int n, double* u)
+house(const double *__restrict__ x, int n, double *__restrict__ u)
+noexcept
 {
-    // ptr to the new householder vector
-    *u = 1.0e0;
-
-    double sigma = 0e0;
+    u[0] = 1.0e0;
+    double sigma {0e0},
+           beta  {0e0};
+    
     for (int i = 1; i < n; ++i) {
         sigma += x[i] * x[i];
         u[i]   = x[i];
     }
 
-    double beta = 0e0;
     if ( sigma == 0e0 ) {
         beta = 0e0;
     } else {
@@ -144,58 +57,170 @@ householder_vector(const double* x, int n, double* u)
         beta = 2e0*u[0]*u[0] / (sigma+u[0]*u[0]);
     }
 
-    double tmp = *u;
-    for (int i = 1; i < n; ++i) u[i] /= tmp;
+    double tmp {u[0]};
+    for (int i = 0; i < n; ++i) u[i] /= tmp;
 
     return beta;
 }
 
-///
-/// \brief QR decomposition via Householder.
-///
-/// Given A with dimensions mxn, where m>=n, the following algorithm finds
-/// Householder matrices H_1, H_2, ..., H_n such that if Q = H_1H_2...H_n
-/// then Q^TA=R is upper triangular. The upper triangular part of A is
-/// overwritten by the upper triangular part of R and components j+1:m of the
-/// j^th Householder vector are stored in A(j+1:m, j), j<m.
-///
-/// Reference: Van Golub, Matrix Computations, p. 224, Algorithm 5.2.1
-///
-/// Modifications:
-/// Instead of giving the vector x, we pass in the A matrix (of dimensions nxm),
-/// of wich x is the col^th column.
-///
-/// \param[in]  A    A matrix of dimenion nxm, where m>n.
-/// \param[in]  m    Number of rows of matrix A.
-/// \param[in]  n    Number of cols of matrix A.
-/// \param[out] beta The scalar b (see description).
-/// \return
-///
 void
-householder_qr(double* A, int n, int m)
+householder_qr(double *__restrict__ A, int rows, int cols)
 {
+    double u[rows],
+           C[rows*cols];
+    int    ROWS = rows,
+           COLS = cols;
     double b;
-    double* u = new double[m];
-    double* t = new double[n*m];
-    double* Ajj;
-    std::size_t idx;
 
-    for (int j = 0; j < n; ++j) {
-        Ajj = &A[m*j]+j;
-        b   = householder_vector(Ajj, m-j+1, u);
-        // A(j:m, j:n) = (I_(m-j+1)-buu^T)A(j:m,j:n)
-        // compute I_(m-j+1)-buu^T <-- t
-        idx = 0;
-        for (std::size_t ii = 0; ii < m-j+1; ii++) {
-            for (std::size_t jj = 0; jj < ii; jj++) {
-                t[idx] = t[ii*(m-j+1)+jj];
-                ++idx;
+    for (int j = 0;  j < COLS; j++) {
+        b = house(&A[j*ROWS+j], ROWS-j, u);
+        for (int col = j; col < COLS; col++) {
+            for (int row = j; row < ROWS; row++) {
+                C[(col-j)*ROWS+row-j] = 0e0;
+                for (int k = 0; k < ROWS-j; k++) {
+                    C[(col-j)*ROWS+row-j] -= u[row-j]*u[k]*A[col*ROWS+k+j];
+               }
+                C[(col-j)*ROWS+row-j] *= b;
+                C[(col-j)*ROWS+row-j] += A[col*ROWS+row];
             }
-            t[idx] = 1e0 - b*u[ii]*u[ii];
-            for (std::size_t jj = ii+1; jj < m-j+1; jj++) {
-                idx++;
-                t[idx] = b*u[ii]*u[jj];
+        }
+        for (int col = 0; col < COLS-j; col++) {
+            for (int row = 0; row < ROWS-j; row++) {
+                A[(col+j)*ROWS+(row+j)] = C[col*ROWS+row];
+            }
+        }
+        if (j < ROWS-1) {
+            for (int row = j+1; row < ROWS; row++) {
+                A[j*ROWS+row] = u[row-j];
             }
         }
     }
+    return;
+}
+
+void qrdcmp(double *__restrict__ a, int n, double *__restrict__ d, int &sign)
+{
+    int i,j,k;
+    double scale, sigma, sum, tau;
+    double c[n*n];
+
+    sign = 0;
+    for (k=0;k<n-1;k++) {
+        scale = 0e0;
+        for (i=k;i<n;i++) scale=std::max(scale,std::abs(a[i*n+k]));
+        if (scale == 0e0) {
+            sign = 1;
+            c[k] = d[k] = 0e0;
+        } else {
+            for (i=k;i<n;i++) a[i*n+k] /= scale;
+            for (sum=0.0,i=k;i<n;i++) sum += (a[i*n+k]*a[i*n+k]);
+            sigma = std::copysign(std::sqrt(sum),a[k*n+k]);
+            a[k*n+k] += sigma;
+            c[k]=sigma*a[k*n+k];
+            d[k] = -scale*sigma;
+            for (j=k+1;j<n;j++) {
+                for (sum=0.0,i=k;i<n;i++) sum += a[i*n+k]*a[i*n+j];
+                tau=sum/c[k];
+                for (i=k;i<n;i++) a[i*n+j] -= tau*a[i*n+k];
+            }
+        }
+    }
+    d[n-1] = a[(n-1)*n+n-1];
+    if (d[n-1] == 0e0) sign = 1;
+}
+
+
+using Clock = std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using namespace std::literals::chrono_literals;
+
+int main()
+{
+    
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_real_distribution<double> distr(-125e0, 125e0); // define the range
+    
+    
+    int ROWS = 4, COLS = 3;
+    double A[] = {1.0e0,  4.0e0,  7.0e0,
+                 10.0e0,  2.0e0,  2.0e0,
+                  8.0e0,  1.0e0, 11.0e0,
+                  6.0e0,  6.0e0,  5.0e0};
+    printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+
+    householder_qr(A, ROWS, COLS);
+    printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+
+    ROWS=COLS=3;
+    double B_rw[] = {12e0,-51e0,  4e0,
+                      6e0,167e0,-68e0,
+                     -4e0, 24e0,-41e0 };
+    double B_cw[] = { 12e0,   6e0,  -4e0,
+                     -51e0, 167e0,  24e0,
+                       4e0, -68e0, -41e0}; 
+    int sign;
+    double d[ROWS];
+    qrdcmp(B_rw, 3, d, sign);
+    printf("\nMatrix B:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",B_rw[i*COLS+j]);
+        }
+        printf("\n");
+    }
+    
+    householder_qr(B_cw, ROWS, COLS);
+    printf("\nMatrix B:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",B_cw[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+
+    time_point<Clock> start,
+                      end;
+    milliseconds      diff;
+    for (int size = 10; size < 1000; size += 200) {
+        double MATRIX[size*size];
+        ROWS = COLS = size;
+        for (int i=0; i<size*size; i++) MATRIX[i] = distr(eng);
+
+        start = Clock::now();
+        householder_qr(MATRIX, ROWS, COLS);
+        end = Clock::now();
+        diff = duration_cast<milliseconds>(end - start);
+        std::cout << size << " " << diff.count() << "ms\n";
+        
+        /*
+        start = Clock::now();
+        try {
+            double D[ROWS];
+            qrdcmp(MATRIX, ROWS, D, sign);
+        } catch (std::exception& e) {
+            std::cerr<<"\n"<<e.what()<<"\n";
+        }
+        end = Clock::now();
+        diff = duration_cast<milliseconds>(end - start);
+        std::cout << diff.count() << "ms\n";
+        */
+    }
+
+    printf("\n");
+    return 0;
 }

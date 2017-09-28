@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <cstdio>
+#include <cassert>
 
 /// \brief Dot product.
 ///
@@ -98,9 +99,26 @@ noexcept
         }
     }
 }
-
+/// \brief Compute Householder vector.
+///
+/// Given vector x of size n, this function computes vector u (of size n), with
+/// u(0) = 1 and b (scalar), such that P = I_n - buu^T is orthogonal and
+/// Px = |x|e_1
+///
+/// \parameter[in]  x     Input vector of size >= n.
+/// \parameter[in]  n     Size of vectors x and u. Only their first n elements
+///                       are considered (i.e. both x and u are considered n-sized).
+/// \parameter[out] u     Vector of size >= n; at output it contains the result
+///                       vector u. Only its first n elements are read/written.
+/// \return               beta (i.e. b).
+///
+/// \note A production version of this algorithm, may involve a preliminary
+///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
+///       scale x to x <- x / |x|.
+///
+/// \ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 210
 double
-house(const double* x, int n, double* u)
+house(const double *__restrict__ x, int n, double *__restrict__ u)
 {
     // ptr to the new householder vector
     *u = 1.0e0;
@@ -137,9 +155,14 @@ householder_qr(double* A, int rows, int cols)
     int    ROWS = rows,
            COLS = cols;
     double b;
+    double u2[rows], b2;
+    for (int i=0;i<rows;i++) u[i] = u2[i] = 0e0;
 
     for (int j = 0;  j < COLS; j++) {
-        b = house(&A[j*ROWS+j], ROWS-j, u);
+        b = house2(&A[j*ROWS+j], ROWS-j, u);
+        b2 = house(&A[j*ROWS+j], ROWS-j, u2);
+        // for (int i=0;i<ROWS-j;i++) assert (u[i] == u2[i]);
+        assert(b == b2);
         for (int col = j; col < COLS; col++) {
             for (int row = j; row < ROWS; row++) {
                 C[(col-j)*ROWS+row-j] = 0e0;
@@ -285,8 +308,8 @@ int main()
     int ROWS = 4, COLS = 3;
     double A[] = {1.0e0,  4.0e0,  7.0e0,
                  10.0e0,  2.0e0,  2.0e0,
-                  8.0e0,  1.0e0, 11.0e0};
-    //              6.0e0,  6.0e0,  5.0e0};
+                  8.0e0,  1.0e0, 11.0e0,
+                  6.0e0,  6.0e0,  5.0e0};
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
         for (int j=0; j<COLS; j++) {
@@ -295,6 +318,7 @@ int main()
         printf("\n");
     }
 
+    /*
     ROWS = 3;
     COLS = 3;
     qrdcmp(A, ROWS, COLS);
@@ -305,8 +329,8 @@ int main()
         }
         printf("\n");
     }
+    */
 
-    /*
     householder_qr(A, ROWS, COLS);
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
@@ -315,7 +339,6 @@ int main()
         }
         printf("\n");
     }
-    */
 
     printf("\n");
     return 0;
