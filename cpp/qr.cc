@@ -64,27 +64,6 @@ noexcept
 }
 
 void
-householder_qr2(double *__restrict__ A, int rows, int cols)
-{
-    double s, fak, d[rows];
-
-    for (int j = 0; j < cols; j++) {
-        s = 0e0;
-        for (int i = j; i < rows; i++) s += A[j*rows+j] * A[j*rows+j];
-        s = std::sqrt(s);
-        d[j] = (A[j*rows+j] > 0e0) ? (-s) : (s);
-        fak = std::sqrt(s*(s+std::abs(A[j*rows+j])));
-        A[j*rows+j] = A[j*rows+j] - d[j];
-        for (int k = j; k < rows; k++) A[k+j*rows] /= fak;
-        for (int i = j+1; i < cols; i++) {
-            s = 0e0;
-            for (int k = j; k < rows; k++) s += A[k+j*rows] * A[k+i*rows];
-            for (int k = j; k < rows; k++) A[k+i*rows] -= A[k+j*rows]*s;
-        }
-    }
-}
-
-void
 householder_qr(double *__restrict__ A, int rows, int cols)
 {
     double u[rows],
@@ -95,6 +74,11 @@ householder_qr(double *__restrict__ A, int rows, int cols)
 
     for (int j = 0;  j < COLS; j++) {
         b = house(&A[j*ROWS+j], ROWS-j, u);
+        //
+        printf("\n\tColumn %1d, b = %5.1f u = [", j, b);
+        for (int kk=0; kk<ROWS-j; kk++) printf("%5.1f ", u[kk]);
+        printf("]");
+        //
         for (int col = j; col < COLS; col++) {
             for (int row = j; row < ROWS; row++) {
                 C[(col-j)*ROWS+row-j] = 0e0;
@@ -124,23 +108,47 @@ myimpl(double *__restrict__ a, double *__restrict__ c,
        double *__restrict__ d, int n, int &sign)
 noexcept
 {
-    double sum;
+    double sum,mi;
     int    row,
-           col;
-    double mi;
+           col,
+           i,
+           j;
+    double b[n], u[n];
 
     for (col = 0; col < n-1; col++) {
         // compute u vector (i.e. Householder vector)
-        for (sum = 0e0, row = col; row < n; row++) sum += a[col*n+row]*a[col*n+row];
-        mi = std::sqrt(a[col*n+col]*a[col*n+col]+sigma);
-        a[col*n+col] = (a[col*n+col]>=0e0)
-                     ? (-sigma/(a[col*n+col]+mi))
+        //
+        printf("\nx = ["); for (row = col; row < n; row++) printf("%5.2f ",a[col*n+row]); printf("]");
+        //
+        for (sum = 0e0, row = col+1; row < n; row++) sum += a[col*n+row]*a[col*n+row];
+        printf("\nsum = %5.3f", sum);
+        mi = std::sqrt(a[col*n+col]*a[col*n+col]+sum);
+        printf("\nmi = %5.3f", mi);
+        u[0] = (a[col*n+col]>=0e0)
+                     ? (-sum/(a[col*n+col]+mi))
                      : (a[col*n+col]-mi);
-        b[col]       = 2e0*(a[col*n+col]*a[col*n+col])/(sigma+a[col*n+col]*a[col*n+col]);
-        // this is not needed; can be computed later on!
-        for (row = col; row < n; row++) a[col*n+rows] /= a[col*n+col];
+        b[col]       = 2e0*(u[0]*u[0])/(sum+u[0]*u[0]);
+        for (row = col+1; row < n; row++) u[row-col] = a[col*n+row]/u[0];
+        u[0] /= u[0];
+        
+        printf("\n\tColumn %1d, b = %5.3f u = [", col, b[col]);
+        for (int kk=0; kk<n-col; kk++) printf("%5.3f ", u[kk]);
+        printf("]");
+        
         // done computing the u vector.
-
+        for (j = col+1; j < n; j++) {
+            for (sum = 0e0, i = col; i < n; i++) sum += a[j*n+i]*u[i-col];
+            sum *= b[col];
+            for (i = col; i < n; i++) a[j*n+i] -= sum*u[i-col];
+        }
+        printf("\n\tColumn %1d, matrix:\n", col);
+        for (int ii=col; ii<n; ii++) {
+            for (int jj=col; jj<n; jj++) {
+                printf("%+15.10f ",a[jj*n+ii]);
+            }
+            printf("\n");
+        }
+    }
 }
 
 void 
@@ -187,6 +195,7 @@ noexcept
     d[n-1] = a[(n-1)*n+n-1];
     if (d[n-1] == 0e0) sign = 1;
 #ifdef DEBUG
+    /*
     printf("\n\tDiagonal part of R is:");
     for (int l=0; l<n; l++) printf("%5.1f ", d[l]);
     printf("\n\tHouseholder vectors:");
@@ -196,6 +205,7 @@ noexcept
             printf("%5.1f ", a[m*n+l]*c[l]);
         }
     }
+    */
 #endif
     return;
 }
@@ -214,14 +224,19 @@ int main()
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_real_distribution<double> distr(-125e0, 125e0); // define the range
     
-    
-    int ROWS = 4, COLS = 3;
-    double A[] = {1.0e0,  4.0e0,  7.0e0,
-                 10.0e0,  2.0e0,  2.0e0,
-                  8.0e0,  1.0e0, 11.0e0,
-                  6.0e0,  6.0e0,  5.0e0};
+    int ROWS = 4, COLS = 4;
+    double A[] = {1.0e0,  -4.0e0,   7.0e0,   3.0e0,
+                 -10.0e0,  2.0e0,  -2.0e0,  -7.0e0,
+                  8.0e0,  -1.0e0,  11.0e0,   8.0e0,
+                  6.0e0,   6.0e0,  -5.0e0, -12.0e0};
     double A_copy[ROWS*COLS];
     for (int i=0; i<ROWS*COLS; i++) A_copy[i] = A[i];
+    double A_rw[ROWS*ROWS];
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            A_rw[i*COLS+j] = A[j*ROWS+i];
+        }
+    }
 
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
@@ -247,7 +262,36 @@ int main()
         }
         printf("\n");
     }
+    
+    int sign;
+    double c[ROWS], d[ROWS];
+    myimpl(A_copy,c,d,ROWS,sign);
+    printf("\nMatrix A after myimpl(...) :\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A_copy[j*ROWS+i]);
+        }
+        printf("\n");
+    }
+    
+    printf("\nMatrix A:\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A_rw[i*COLS+j]);
+        }
+        printf("\n");
+    }
+    
+    qrdcmp(A_rw,c,d,ROWS,sign);
+    printf("\nMatrix A after qrdcmp(...) :\n");
+    for (int i=0; i<ROWS; i++) {
+        for (int j=0; j<COLS; j++) {
+            printf("%+15.10f ",A_rw[i*COLS+j]);
+        }
+        printf("\n");
+    }
 
+    /*
     householder_qr2(A_copy, ROWS, COLS);
     printf("\nMatrix A after householder_qr2(...) :\n");
     for (int i=0; i<ROWS; i++) {
@@ -292,7 +336,6 @@ int main()
         printf("\n");
     }
 
-    /*
     time_point<Clock> start,
                       end;
     milliseconds      diff;
