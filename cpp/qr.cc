@@ -11,7 +11,6 @@
 ///
 /// \notes
 ///     - All matrix/vector indexes start from 0.
-///     - All matrix/vector are stored column-wise
 ///
 
 /// \brief Compute Householder vector.
@@ -64,56 +63,11 @@ noexcept
 }
 
 void
-householder_qr(double *__restrict__ A, int rows, int cols)
-{
-    double u[rows],
-           C[rows*cols];
-    int    ROWS = rows,
-           COLS = cols;
-    double b;
-
-    for (int j = 0;  j < COLS; j++) {
-        b = house(&A[j*ROWS+j], ROWS-j, u);
-        //
-        printf("\n\tColumn %1d, b = %5.1f u = [", j, b);
-        for (int kk=0; kk<ROWS-j; kk++) printf("%5.1f ", u[kk]);
-        printf("]");
-        //
-        for (int col = j; col < COLS; col++) {
-            for (int row = j; row < ROWS; row++) {
-                C[(col-j)*ROWS+row-j] = 0e0;
-                for (int k = 0; k < ROWS-j; k++) {
-                    C[(col-j)*ROWS+row-j] -= u[row-j]*u[k]*A[col*ROWS+k+j];
-               }
-                C[(col-j)*ROWS+row-j] *= b;
-                C[(col-j)*ROWS+row-j] += A[col*ROWS+row];
-            }
-        }
-        for (int col = 0; col < COLS-j; col++) {
-            for (int row = 0; row < ROWS-j; row++) {
-                A[(col+j)*ROWS+(row+j)] = C[col*ROWS+row];
-            }
-        }
-        if (j < ROWS-1) {
-            for (int row = j+1; row < ROWS; row++) {
-                A[j*ROWS+row] = u[row-j];
-            }
-        }
-    }
-    return;
-}
-
-void
-myimpl(double *__restrict__ a, double *__restrict__ c,
-       double *__restrict__ d, int n, int &sign)
+myimpl(double *__restrict__ a, double *__restrict__ b, int n, int &sign)
 noexcept
 {
-    double sum,mi;
-    int    row,
-           col,
-           i,
-           j;
-    double b[n], u[n];
+    double sum,mi,u[n];
+    int    row,col,i,j;
 
     for (col = 0; col < n-1; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
@@ -127,12 +81,12 @@ noexcept
         for (row = col+1; row < n; row++) u[row-col] = a[col*n+row]/u[0];
         u[0] /= u[0];
         
-        // Done computing the u vector; assign it to the A(col+1:n, col)
-        for (i = col+1; i < n; i++) a[col*n+i] = u[i-col];
-
         // Compute A(col, col)
         for (sum = 0e0, row = col; row < n; row++) sum += a[col*n+row]*u[row-col];
-        a[col*n+col] -= sum*b[col]*u[0];
+        a[col*n+col] -= sum*b[col];
+        
+        // Assign householder vector to A(col+1:n, col)
+        for (i = col+1; i < n; i++) a[col*n+i] = u[i-col];
         
         // Compute A(col+1:n, col+1:n) = (I-buu^T)A(col+1:n, col+1:n)
         for (j = col+1; j < n; j++) {
@@ -238,15 +192,6 @@ int main()
         printf("\n");
     }
 
-    householder_qr(A, ROWS, COLS);
-    printf("\nMatrix A after householder_qr(...) :\n");
-    for (int i=0; i<ROWS; i++) {
-        for (int j=0; j<COLS; j++) {
-            printf("%+15.10f ",A[j*ROWS+i]);
-        }
-        printf("\n");
-    }
-    
     printf("\nMatrix A:\n");
     for (int i=0; i<ROWS; i++) {
         for (int j=0; j<COLS; j++) {
@@ -257,7 +202,7 @@ int main()
     
     int sign;
     double c[ROWS], d[ROWS];
-    myimpl(A_copy,c,d,ROWS,sign);
+    myimpl(A_copy,c,ROWS,sign);
     printf("\nMatrix A after myimpl(...) :\n");
     for (int i=0; i<ROWS; i++) {
         for (int j=0; j<COLS; j++) {
@@ -284,15 +229,6 @@ int main()
     }
 
     /*
-    householder_qr2(A_copy, ROWS, COLS);
-    printf("\nMatrix A after householder_qr2(...) :\n");
-    for (int i=0; i<ROWS; i++) {
-        for (int j=0; j<COLS; j++) {
-            printf("%+15.10f ",A_copy[j*ROWS+i]);
-        }
-        printf("\n");
-    }
-
     ROWS=COLS=3;
     double B_rw[] = {12e0,-51e0,  4e0,
                       6e0,167e0,-68e0,
@@ -332,13 +268,13 @@ int main()
     time_point<Clock> start,
                       end;
     milliseconds      diff;
-    for (int size = 10; size < 1000; size += 200) {
+    for (int size = 10; size < 10000; size += size*(size/2)) {
         double MATRIX[size*size], C[size], D[size];
         ROWS = COLS = size;
         for (int i=0; i<size*size; i++) MATRIX[i] = distr(eng);
 
         start = Clock::now();
-        myimpl(MATRIX, C, D, size, sign);
+        myimpl(MATRIX, C, size, sign);
         end = Clock::now();
         diff = duration_cast<milliseconds>(end - start);
         std::cout << size << " myimpl: " << diff.count();
