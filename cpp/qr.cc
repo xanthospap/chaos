@@ -116,37 +116,29 @@ noexcept
     double b[n], u[n];
 
     for (col = 0; col < n-1; col++) {
-        // compute u vector (i.e. Householder vector)
-        //
-        printf("\nx = ["); for (row = col; row < n; row++) printf("%5.2f ",a[col*n+row]); printf("]");
-        //
+        //  compute u vector (i.e. Householder vector) based on the input
+        //+ vector A(col:n, col).
         for (sum = 0e0, row = col+1; row < n; row++) sum += a[col*n+row]*a[col*n+row];
-        printf("\nsum = %5.3f", sum);
-        mi = std::sqrt(a[col*n+col]*a[col*n+col]+sum);
-        printf("\nmi = %5.3f", mi);
-        u[0] = (a[col*n+col]>=0e0)
-                     ? (-sum/(a[col*n+col]+mi))
-                     : (a[col*n+col]-mi);
-        b[col]       = 2e0*(u[0]*u[0])/(sum+u[0]*u[0]);
+        mi      = std::sqrt(a[col*n+col]*a[col*n+col]+sum);
+        u[0]    = (a[col*n+col]>=0e0)
+                ? (-sum/(a[col*n+col]+mi))
+                : (a[col*n+col]-mi);
+        b[col]  = 2e0*(u[0]*u[0])/(sum+u[0]*u[0]);
         for (row = col+1; row < n; row++) u[row-col] = a[col*n+row]/u[0];
         u[0] /= u[0];
         
-        printf("\n\tColumn %1d, b = %5.3f u = [", col, b[col]);
-        for (int kk=0; kk<n-col; kk++) printf("%5.3f ", u[kk]);
-        printf("]");
+        // Done computing the u vector; assign it to the A(col+1:n, col)
+        for (i = col+1; i < n; i++) a[col*n+i] = u[i-col];
+
+        // Compute A(col, col)
+        for (sum = 0e0, row = col; row < n; row++) sum += a[col*n+row]*u[row-col];
+        a[col*n+col] -= sum*b[col]*u[0];
         
-        // done computing the u vector.
+        // Compute A(col+1:n, col+1:n) = (I-buu^T)A(col+1:n, col+1:n)
         for (j = col+1; j < n; j++) {
-            for (sum = 0e0, i = col; i < n; i++) sum += a[j*n+i]*u[i-col];
+            for (sum = 0e0, row = col; row < n; row++) sum += a[j*n+row]*u[row-col];
             sum *= b[col];
-            for (i = col; i < n; i++) a[j*n+i] -= sum*u[i-col];
-        }
-        printf("\n\tColumn %1d, matrix:\n", col);
-        for (int ii=col; ii<n; ii++) {
-            for (int jj=col; jj<n; jj++) {
-                printf("%+15.10f ",a[jj*n+ii]);
-            }
-            printf("\n");
+            for (row = col; row < n; row++) a[j*n+row] -= sum*u[row-col];
         }
     }
 }
@@ -335,33 +327,28 @@ int main()
         }
         printf("\n");
     }
+    */
 
     time_point<Clock> start,
                       end;
     milliseconds      diff;
     for (int size = 10; size < 1000; size += 200) {
-        double MATRIX[size*size];
+        double MATRIX[size*size], C[size], D[size];
         ROWS = COLS = size;
         for (int i=0; i<size*size; i++) MATRIX[i] = distr(eng);
 
         start = Clock::now();
-        householder_qr(MATRIX, ROWS, COLS);
+        myimpl(MATRIX, C, D, size, sign);
         end = Clock::now();
         diff = duration_cast<milliseconds>(end - start);
-        std::cout << size << " " << diff.count() << "ms\n";
+        std::cout << size << " myimpl: " << diff.count();
         
         start = Clock::now();
-        try {
-            double D[ROWS];
-            qrdcmp(MATRIX, ROWS, D, sign);
-        } catch (std::exception& e) {
-            std::cerr<<"\n"<<e.what()<<"\n";
-        }
+        qrdcmp(MATRIX, C, D, size, sign);
         end = Clock::now();
         diff = duration_cast<milliseconds>(end - start);
-        std::cout << diff.count() << "ms\n";
+        std::cout << " qrdcmp: " << diff.count() << "ms\n";
     }
-    */
 
     printf("\n");
     return 0;
