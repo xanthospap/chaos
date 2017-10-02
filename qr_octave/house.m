@@ -1,5 +1,5 @@
 function[u, b] = house(x)
-    x
+    %x
     n     = length(x);
     sigma = transpose(x(2:n))*x(2:n);
     %sigma
