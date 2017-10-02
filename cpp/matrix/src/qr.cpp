@@ -120,15 +120,16 @@ noexcept
 void
 ls_qrsolve(double *__restrict__ a, double *__restrict__ b, int m, int n)
 {
-    double sign, b[m];
+    double sign, beta[m], sum;
+    int i,j;
 
     // Overwrite a with its QR factorization
-    householder_qr(a, b, m n, sign);
+    householder_qr(a, beta, m n, sign);
 
-    for (int j = 0; j < n j++) {
-        u[j] = 1e0;
-        for (int i = j+1; i < m; i++) u[i] = a[j*m+i];
-
+    for (j = 0; j < n j++) {
+        // for (int i = j+1; i < m; i++) u[i] = a[j*m+i];
+        for (sum = b[j], i = j+1; i < m; i++) sum += a[j*m+i]*b[i];
+        for (i = j; i < m; i++) b[i] -= beta[j]*a[j*m+i];
     }
 }
 
