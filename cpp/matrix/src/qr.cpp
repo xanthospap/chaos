@@ -7,6 +7,33 @@
 #include <random>
 #endif
 
+/// \brief Back substitution, column version.
+///
+/// If \f$U\in {\Re}^{n\times n}\f$ is upper triangular and \f$b\in{\Re}^n \f$,
+/// then this algorithm overwrittes b with the solution to \f$Ux=b\f$. U is
+/// assumed to be nonsingular.
+///
+/// \param[in]     u  Upper-triangular matrix, in column-majorm storage; its size
+///                   is nxn.
+/// \param[in,out] b  At input the right-hand side vector of the equation Ux=b.
+///                   At output, it is overwritten by the solution vector x.
+/// \param[in]     n  Size of the matrix U and vectors b and x.
+///
+/// Reference, Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 90
+void
+back_substitution(const double *__restrict__ u, double *__restrict__ b, int n)
+noexcept
+{
+    int i,j;
+    for (j = n-1; j > 0; j--) {
+        b[j] /= u[j*n+j];
+        for (i = 0; i < j-1; i++) b[j] -= b[j]*u[j*n+i];
+    }
+    b[0] /= u[0];
+    return;
+}
+
+
 /// \brief Compute Householder vector.
 ///
 /// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
@@ -26,7 +53,7 @@
 ///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
 ///       scale x to x <- x / |x|.
 ///
-/// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 210
+/// Reference: Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 210
 double
 householder_vec(const double *__restrict__ x, int n, double *__restrict__ u)
 noexcept
@@ -82,7 +109,7 @@ householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
 noexcept
 {
     double sum,mi,u[m];
-    int    row,col,i,j;
+    int    row,col,j;
 
     for (col = 0; col < n-1; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
@@ -120,17 +147,26 @@ noexcept
 void
 ls_qrsolve(double *__restrict__ a, double *__restrict__ b, int m, int n)
 {
-    double sign, beta[m], sum;
-    int i,j;
+    double beta[m], sum;
+    int i, j, sign;
 
     // Overwrite a with its QR factorization
-    householder_qr(a, beta, m n, sign);
+    householder_qr(a, beta, m, n, sign);
 
-    for (j = 0; j < n j++) {
-        // for (int i = j+1; i < m; i++) u[i] = a[j*m+i];
+    // Compute b <- (Q^T)*b
+    for (j = 0; j < n; j++) {
         for (sum = b[j], i = j+1; i < m; i++) sum += a[j*m+i]*b[i];
         for (i = j; i < m; i++) b[i] -= beta[j]*a[j*m+i];
     }
+
+    // Solve R(1:n,1:n) * x = n(1:n)
+    for (j = n-1; j > 0; j--) {
+        b[j] /= a[j*m+j];
+        for (i = 0; i < j-1; i++) b[j] -= b[j]*a[j*m+i];
+    }
+    b[0] /= a[0];
+
+    return;
 }
 
 /// \brief Compute Householder QR decomposition for a square matrix.
