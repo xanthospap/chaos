@@ -1,4 +1,4 @@
-function[QR, beta] = householder(A)
+function[QR, beta, Q] = householder(A)
     [m, n] = size(A);
     bvec   = zeros(n,1);
     for j = 1:n
@@ -11,4 +11,4 @@ function[QR, beta] = householder(A)
     end
     QR = A;
     beta = bvec;
-    % Q = getq(A, bvec);
+    Q = getq(A, bvec);
