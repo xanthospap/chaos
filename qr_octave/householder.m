@@ -9,6 +9,6 @@ function[QR, beta, Q] = householder(A)
             A(j+1:m, j) = u(2:m-j+1);
         end
     end
-    QR = A;
+    QR   = A;
     beta = bvec;
-    Q = getq(A, bvec);
+    Q    = getq(A, bvec);

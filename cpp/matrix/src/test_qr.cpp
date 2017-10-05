@@ -82,7 +82,7 @@ int main()
     double y[] = {-35.84000,-36.27000,-35.78800,-34.39400,-32.08800,-28.87000,-24.74000,-19.69800,-13.74400, -6.87800,  0.90000,  9.59000, 19.19200, 29.70600, 41.13200, 53.47000, 66.72000, 80.88200, 95.95600,111.94200,128.84000};
 
     ls_qrsolve(C, y, 21, 3);
-    printf("\n-- QR Solve --");
+    printf("\n-- QR Solve -- (mine)");
     for (int i=0; i<3; i++) printf("\n\tx[%1d] = %+7.3f", i+1, y[i]);
     Eigen::MatrixXd C_rw(21, 3);
     Eigen::VectorXd y_rw(21), x_rw(21);
@@ -93,7 +93,7 @@ int main()
         }
     }
     x_rw = C_rw.householderQr().solve(y_rw);
-    printf("\n-- QR Solve --");
+    printf("\n-- QR Solve -- (eigen)");
     std::cout<< "\n" << x_rw << "\n";
 
     /*   

@@ -104,12 +104,19 @@ noexcept
 ///
 /// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
 void
-householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
+householder_qr_alpha(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
 noexcept
 {
-    double sum,mi,u[m];
+    double sum,mi,*u;
     int    row,col,j;
+
+    try {
+        u = new double[m];
+    } catch (std::bad_alloc&) {
+        sign = 1;
+        return;
+    }
 
     for (col = 0; col < n; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
@@ -122,7 +129,7 @@ noexcept
         b[col]  = 2e0*(u[0]*u[0])/(sum+u[0]*u[0]);
         for (row = col+1; row < m; row++) u[row-col] = a[col*m+row]/u[0];
         u[0] /= u[0];
-        
+
         // Compute A(col, col)
         for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
         a[col*m+col] -= sum*b[col];
@@ -137,6 +144,41 @@ noexcept
             for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
         }
     }
+}
+
+void
+householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
+    int &sign)
+noexcept
+{
+    double sum,sigma;
+    int    row,col,j;
+    double d[n];
+
+    for (col = 0; col < n; col++) {
+        //  compute u vector (i.e. Householder vector) based on the input
+        //+ vector A(col:m, col).
+        for (sum = 0e0, row = col+1; row < m; row++) sum += a[col*m+row]*a[col*m+row];
+        sigma = std::copysign(std::sqrt(sum), a[col*m+col]);
+        a[col*m+col] += sigma;
+        b[col] = sigma*a[col*m+col];
+        d[col] = -sigma;
+
+        /* Compute A(col, col)
+        for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
+        a[col*m+col] -= sum*b[col]; */
+        
+        /* Assign householder vector to A(col+1:m, col)
+        for (row = col+1; row < m; row++) a[col*m+row] = u[row-col]; */
+        
+        // Compute A(col+1:m, col+1:n) = (I-buu^T)A(col+1:m, col+1:n)
+        for (j = col+1; j < n; j++) {
+            for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*a[col*m+row];
+            sum /= b[col];
+            for (row = col; row < m; row++) a[j*m+row] -= sum*a[col*m+row];
+        }
+    }
+    return;
 }
 
 /// \brief Householder LS solution.
