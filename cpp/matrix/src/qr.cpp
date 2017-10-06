@@ -151,31 +151,38 @@ householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
 noexcept
 {
-    double sum,sigma;
+    double sum,*u,alpha,r;
     int    row,col,j;
-    double d[n];
+
+    try {
+        u = new double[m];
+    } catch (std::bad_alloc&) {
+        sign = 1;
+        return;
+    }
 
     for (col = 0; col < n; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
         //+ vector A(col:m, col).
         for (sum = 0e0, row = col+1; row < m; row++) sum += a[col*m+row]*a[col*m+row];
-        sigma = std::copysign(std::sqrt(sum), a[col*m+col]);
-        a[col*m+col] += sigma;
-        b[col] = sigma*a[col*m+col];
-        d[col] = -sigma;
+        alpha = std::copysign(sum, a[col*m+col+1]);
+        r     = std::sqrt((alpha*alpha-a[col*m+col+1]*alpha)*0.5e0);
+        u[0] = 0e0;
+        u[1] = (a[col*m+col+1]-alpha)/(2e0*r);
+        for (row = 2; row < m; row++) u[row] = a[col*m+col+row]/(2e0*r);
 
-        /* Compute A(col, col)
-        for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
-        a[col*m+col] -= sum*b[col]; */
+        // Compute A(col, col)
+        // for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
+        // a[col*m+col] -= sum*b[col];
         
-        /* Assign householder vector to A(col+1:m, col)
-        for (row = col+1; row < m; row++) a[col*m+row] = u[row-col]; */
+        // Assign householder vector to A(col+1:m, col)
+        for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
         
         // Compute A(col+1:m, col+1:n) = (I-buu^T)A(col+1:m, col+1:n)
         for (j = col+1; j < n; j++) {
-            for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*a[col*m+row];
-            sum /= b[col];
-            for (row = col; row < m; row++) a[j*m+row] -= sum*a[col*m+row];
+            for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*u[row-col];
+            // sum *= b[col];
+            for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
         }
     }
     return;
