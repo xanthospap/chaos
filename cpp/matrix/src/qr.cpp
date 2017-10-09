@@ -85,6 +85,20 @@ noexcept
     return beta;
 }
 
+double
+householder_vec2(const double *__restrict__ x, int n, double *__restrict__ u)
+noexcept
+/// http://www.math.usm.edu/lambers/mat610/sum10/lecture9.pdf
+{
+    int i;
+    double sum, alpha;
+    for (sum = 0e0, i = 0; i < n; i++) sum += x[i]*x[i];
+    alpha = std::sqrt(sum);
+    u[0] = -std::copysign(std::sqrt((alpha-x[0])/2e0*alpha), x[0]);
+    for (i = 1; i < n; i++) u[i] = -x[i]/(2e0*alpha*u[0]);
+    return 2e0;
+}
+
 /// \brief Compute Householder QR decomposition.
 ///
 /// Given \f$A\in{\Re}^{m\times n}\f$ with \$fm\geq n\f$, the following
@@ -151,7 +165,7 @@ householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
 noexcept
 {
-    double sum,*u,alpha,r;
+    double sum,*u,normx,u1,s;
     int    row,col,j;
 
     try {
@@ -164,24 +178,23 @@ noexcept
     for (col = 0; col < n; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
         //+ vector A(col:m, col).
-        for (sum = 0e0, row = col+1; row < m; row++) sum += a[col*m+row]*a[col*m+row];
-        alpha = std::copysign(sum, a[col*m+col+1]);
-        r     = std::sqrt((alpha*alpha-a[col*m+col+1]*alpha)*0.5e0);
-        u[0] = 0e0;
-        u[1] = (a[col*m+col+1]-alpha)/(2e0*r);
-        for (row = 2; row < m; row++) u[row] = a[col*m+col+row]/(2e0*r);
-
-        // Compute A(col, col)
-        // for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
-        // a[col*m+col] -= sum*b[col];
-        
-        // Assign householder vector to A(col+1:m, col)
+        for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*a[col*m+row];
+        normx = std::sqrt(sum);
+        s = -std::copysign(1e0, a[col*m+col]);
+        u1 = a[col*m+col]-s*normx;
+        for (row = col; row < m; row++) u[row-col] = a[col*m+row]/u1;
+        u[0] = 1e0;
         for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
+        a[col*m+col] = s*normx;
+        u[col] = -s*u1/normx;
+
+        // Assign householder vector to A(col+1:m, col)
+        // for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
         
         // Compute A(col+1:m, col+1:n) = (I-buu^T)A(col+1:m, col+1:n)
         for (j = col+1; j < n; j++) {
             for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*u[row-col];
-            // sum *= b[col];
+            sum *= u[col];
             for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
         }
     }
