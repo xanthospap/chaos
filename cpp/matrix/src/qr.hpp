@@ -23,3 +23,6 @@ void
 qrdcmp(double *__restrict__ a, double *__restrict__ c, double *__restrict__ d,
     int n, int &sign)
 noexcept;
+
+void
+thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n);

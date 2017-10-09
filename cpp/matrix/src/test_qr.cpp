@@ -60,6 +60,17 @@ int main()
         }
         printf("\n");
     }
+    
+    // get the Q matrix
+    double q[rows*cols];
+    thin_q( A_cw, beta, q, rows, cols);
+    printf("\nMatrix Q after householder_qr(...) :\n");
+    for (int i=0; i<rows; i++) {
+        for (int j=0; j<cols; j++) {
+            printf("%+15.10f ",q[j*rows+i]);
+        }
+        printf("\n");
+    }
 
     // Perform QR via Eigen
     Eigen::MatrixXd thinQ (Eigen::MatrixXd::Identity(rows,cols)),

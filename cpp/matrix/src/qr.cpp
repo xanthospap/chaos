@@ -85,10 +85,29 @@ noexcept
     return beta;
 }
 
+/// \brief Compute Householder vector.
+///
+/// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
+/// and \f$\beta \in \Re\f$ (scalar), such that \f$P = I_n - \beta uu^T\f$ is
+/// orthogonal and \f$Px = \|x\|_2 e_1\f$.
+///
+/// \param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
+/// \param[in]  n     Size of vectors x and u. Only their first n elements
+///                   are considered (both x and u can have sizes larger than
+///                   n, but not smaller).
+/// \param[out] u     Vector of size >= n; at output it contains the result
+///                   Householder vector u. Only its first n elements are 
+///                   read/written (aka \f$u\in{\Re}^{n}\f$).
+/// \return           beta (aka \f$\beta\in\Re\f$).
+///
+/// \note A production version of this algorithm, may involve a preliminary
+///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
+///       scale x to x <- x / |x|.
+///
+/// Reference: http://www.math.usm.edu/lambers/mat610/sum10/lecture9.pdf
 double
 householder_vec2(const double *__restrict__ x, int n, double *__restrict__ u)
 noexcept
-/// http://www.math.usm.edu/lambers/mat610/sum10/lecture9.pdf
 {
     int i;
     double sum, alpha;
@@ -158,6 +177,9 @@ noexcept
             for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
         }
     }
+
+    delete[] u;
+    return;
 }
 
 void
@@ -165,7 +187,7 @@ householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
 noexcept
 {
-    double sum,*u,normx,u1,s;
+    double *u,sum;
     int    row,col,j;
 
     try {
@@ -178,26 +200,55 @@ noexcept
     for (col = 0; col < n; col++) {
         //  compute u vector (i.e. Householder vector) based on the input
         //+ vector A(col:m, col).
-        for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*a[col*m+row];
-        normx = std::sqrt(sum);
-        s = -std::copysign(1e0, a[col*m+col]);
-        u1 = a[col*m+col]-s*normx;
-        for (row = col; row < m; row++) u[row-col] = a[col*m+row]/u1;
-        u[0] = 1e0;
-        for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
-        a[col*m+col] = s*normx;
-        u[col] = -s*u1/normx;
-
-        // Assign householder vector to A(col+1:m, col)
-        // for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
+        b[col] = householder_vec(&a[col*m+col], m-col, u);
         
-        // Compute A(col+1:m, col+1:n) = (I-buu^T)A(col+1:m, col+1:n)
-        for (j = col+1; j < n; j++) {
+        // Compute A(col:m, col:n) = (I-buu^T)A(col+1:m, col+1:n)
+        for (j = col; j < n; j++) {
             for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*u[row-col];
-            sum *= u[col];
+            sum *= b[col];
             for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
         }
+
+        // if (j < m) A(j+1:m, j) = u(2:m-j+1)
+        if (col < m) {
+            for (row = col+1; row < m; row++) a[col*m+row] = u[row-col+1];
+        }
     }
+
+    delete[] u;
+    return;
+}
+
+void
+thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
+{
+    int i,j,col;
+    double sum,*u;
+
+    try {
+        u = new double[m];
+    } catch (std::bad_alloc&) {
+        return;
+    }
+
+    int N = m;
+    for (col = 0; col < n; col++) {
+        for (i = 0; i < col; i++) q[col*N+i] = 0e0;
+        q[col*m+col] = 1e0;
+        for (i = col; i < N; i++) q[col*N+i] = 0e0;
+    }
+
+    for (j = n-1; j >= 0; j--) {
+        u[j] = 1e0;
+        for (i = j+1; i < N; i++) u[i] = a[j*N+i];
+        for (i = j; i<N; i++) printf("%+7.3f ", u[i]);
+        printf("\n");
+        for (sum = 0e0, i = j; i < N; i++) sum += u[i]*q[j*N+i];
+        sum *= b[j-n+1];
+        printf("\n\t sum = %7.3f*%7.3f\n", sum, b[j-n+1]);
+        for (sum = 0e0, i = j; i < N; i++) q[j*N+i] -= sum*u[i];
+    }
+    delete[] u;
     return;
 }
 
