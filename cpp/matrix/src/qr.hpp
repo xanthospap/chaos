@@ -26,3 +26,5 @@ noexcept;
 
 void
 thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n);
+void
+qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n);

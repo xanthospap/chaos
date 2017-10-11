@@ -211,7 +211,7 @@ noexcept
 
         // if (j < m) A(j+1:m, j) = u(2:m-j+1)
         if (col < m) {
-            for (row = col+1; row < m; row++) a[col*m+row] = u[row-col+1];
+            for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
         }
     }
 
@@ -219,6 +219,7 @@ noexcept
     return;
 }
 
+/// Algorithm 5.1.5, pg. 213
 void
 thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
 {
@@ -231,23 +232,53 @@ thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, i
         return;
     }
 
-    int N = m;
+    int r = n;
+    // Q e R(nxn)
     for (col = 0; col < n; col++) {
-        for (i = 0; i < col; i++) q[col*N+i] = 0e0;
-        q[col*m+col] = 1e0;
-        for (i = col; i < N; i++) q[col*N+i] = 0e0;
+        for (i = 0; i < col; i++) q[col*n+i] = 0e0;
+        q[col*n+col] = 1e0;
+        for (i = col+1; i < n; i++) q[col*n+i] = 0e0;
     }
+
+    for (j = r-1; j >= 0; j--) {
+        u[j] = 1e0;
+        for (i = j+1; i < n; i++) u[i] = a[j*m+i];
+        for (col = j; col < n; col++) {
+            for (sum = 0e0, i = j; i < n; i++) sum += u[i]*q[col*n+i];
+            sum *= b[j];
+            for (i = j; i < n; i++) q[col*n+i] -= sum*u[i];
+        }
+    }
+
+    delete[] u;
+    return;
+}
+
+void
+qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
+{
+    int i,j,col;
+    double sum,*u;
+
+    try {
+        u = new double[m];
+    } catch (std::bad_alloc&) {
+        return;
+    }
+
+    std::fill(q, q+m*n, 0e0);
+    for (col = 0; col < n; col++) q[col*m+col] = 1e0;
 
     for (j = n-1; j >= 0; j--) {
         u[j] = 1e0;
-        for (i = j+1; i < N; i++) u[i] = a[j*N+i];
-        for (i = j; i<N; i++) printf("%+7.3f ", u[i]);
-        printf("\n");
-        for (sum = 0e0, i = j; i < N; i++) sum += u[i]*q[j*N+i];
-        sum *= b[j-n+1];
-        printf("\n\t sum = %7.3f*%7.3f\n", sum, b[j-n+1]);
-        for (sum = 0e0, i = j; i < N; i++) q[j*N+i] -= sum*u[i];
+        for (i = j+1; i < m; i++) u[i] = a[j*m+i];
+        for (col = j; col < n; col++) {
+            for (sum = 0e0, i = j; i < m; i++) sum += u[i]*q[col*m+i];
+            sum *= b[j];
+            for (i = j; i < m; i++) q[col*m+i] -= sum*u[i];
+        }
     }
+
     delete[] u;
     return;
 }

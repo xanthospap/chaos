@@ -11,4 +11,4 @@ function[QR, beta, Q] = householder(A)
     end
     QR   = A;
     beta = bvec;
-    Q    = getq(A, bvec);
+    Q    = getq(A, bvec, n);
