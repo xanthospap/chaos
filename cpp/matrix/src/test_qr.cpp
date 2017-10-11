@@ -74,11 +74,12 @@ int main()
     
     // get the Q matrix
     double qq[cols*rows];
+    printf("\n");
     qr_q(A_cw, beta, qq, rows, cols);
     printf("\nMatrix Q after householder_qr(...) :\n");
     for (int i=0; i<rows; i++) {
         for (int j=0; j<cols; j++) {
-            printf("%+15.10f ",qq[j*cols+i]);
+            printf("%+15.10f ",qq[j*rows+i]);
         }
         printf("\n");
     }

@@ -234,11 +234,8 @@ thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, i
 
     int r = n;
     // Q e R(nxn)
-    for (col = 0; col < n; col++) {
-        for (i = 0; i < col; i++) q[col*n+i] = 0e0;
-        q[col*n+col] = 1e0;
-        for (i = col+1; i < n; i++) q[col*n+i] = 0e0;
-    }
+    std::fill(q, q+n*n, 0e0);
+    for (col = 0; col < n; col++) q[col*n+col] = 1e0;
 
     for (j = r-1; j >= 0; j--) {
         u[j] = 1e0;
@@ -270,13 +267,22 @@ qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int
     for (col = 0; col < n; col++) q[col*m+col] = 1e0;
 
     for (j = n-1; j >= 0; j--) {
+        //printf("\nj=%1d ", j);
         u[j] = 1e0;
         for (i = j+1; i < m; i++) u[i] = a[j*m+i];
+        //for (i=j; i<m; i++) printf("%7.3f ", u[i]);
         for (col = j; col < n; col++) {
             for (sum = 0e0, i = j; i < m; i++) sum += u[i]*q[col*m+i];
+            //printf("\n\tcol=%1d sum=%7.3f, b=%7.3f", col, sum, b[j]);
             sum *= b[j];
             for (i = j; i < m; i++) q[col*m+i] -= sum*u[i];
+        }/*
+    for (i=0; i<m; i++) {
+        for (int jj=0; jj<n; jj++) {
+            printf("%+15.10f ",q[jj*m+i]);
         }
+        printf("\n");
+    }*/
     }
 
     delete[] u;
