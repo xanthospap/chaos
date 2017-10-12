@@ -88,8 +88,7 @@ noexcept
 /// \brief Compute Householder vector.
 ///
 /// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
-/// and \f$\beta \in \Re\f$ (scalar), such that \f$P = I_n - \beta uu^T\f$ is
-/// orthogonal and \f$Px = \|x\|_2 e_1\f$.
+/// such that \f$P = I_n - 2uu^T\f$ is orthogonal and \f$Px = \|x\|_2 e_1\f$.
 ///
 /// \param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
 /// \param[in]  n     Size of vectors x and u. Only their first n elements
@@ -109,8 +108,10 @@ double
 householder_vec2(const double *__restrict__ x, int n, double *__restrict__ u)
 noexcept
 {
-    int i;
-    double sum, alpha;
+    int    i;
+    double sum,
+           alpha;
+
     for (sum = 0e0, i = 0; i < n; i++) sum += x[i]*x[i];
     alpha = std::sqrt(sum);
     u[0] = -std::copysign(std::sqrt((alpha-x[0])/2e0*alpha), x[0]);
@@ -267,22 +268,13 @@ qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int
     for (col = 0; col < n; col++) q[col*m+col] = 1e0;
 
     for (j = n-1; j >= 0; j--) {
-        //printf("\nj=%1d ", j);
         u[j] = 1e0;
         for (i = j+1; i < m; i++) u[i] = a[j*m+i];
-        //for (i=j; i<m; i++) printf("%7.3f ", u[i]);
         for (col = j; col < n; col++) {
             for (sum = 0e0, i = j; i < m; i++) sum += u[i]*q[col*m+i];
-            //printf("\n\tcol=%1d sum=%7.3f, b=%7.3f", col, sum, b[j]);
             sum *= b[j];
             for (i = j; i < m; i++) q[col*m+i] -= sum*u[i];
-        }/*
-    for (i=0; i<m; i++) {
-        for (int jj=0; jj<n; jj++) {
-            printf("%+15.10f ",q[jj*m+i]);
         }
-        printf("\n");
-    }*/
     }
 
     delete[] u;
@@ -297,25 +289,50 @@ qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int
 void
 ls_qrsolve(double *__restrict__ a, double *__restrict__ b, int m, int n)
 {
-    double beta[m], sum;
+    double *beta, *u, sum;
     int i, j, sign;
+
+    try {
+        beta = new double[m];
+        u    = new double[m];
+    } catch (std::bad_alloc&) {
+        return;
+    }
 
     // Overwrite a with its QR factorization
     householder_qr(a, beta, m, n, sign);
+    printf("\n\tHouseholder QR of A, is:\n");
+    for (int row=0;row<m;row++) {
+        for (int col=0;col<n;col++) {
+            printf(" %7.3f ", a[col*m+row]);
+        }
+        printf("\n");
+    }
 
     // Compute b <- (Q^T)*b
     for (j = 0; j < n; j++) {
+        printf("\nj=%1d",j);
         for (sum = b[j], i = j+1; i < m; i++) sum += a[j*m+i]*b[i];
-        for (i = j; i < m; i++) b[i] -= beta[j]*a[j*m+i];
+        printf(" sum=%7.3f", sum);
+        sum *= beta[j];
+        b[j] -= sum;
+        for (i = j+1; i < m; i++) b[i] -= sum*a[j*m+i];
     }
+    printf("\nNew b vector:");
+    for (i=0; i<m;i++) printf(" %7.5f", b[i]);
 
     // Solve R(1:n,1:n) * x = n(1:n)
     for (j = n-1; j > 0; j--) {
+        printf("\nb[%1d] = %7.5f / %7.5f",j, b[j], a[j*m+j]);
         b[j] /= a[j*m+j];
-        for (i = 0; i < j-1; i++) b[j] -= b[j]*a[j*m+i];
+        for (i = 0; i < j-1; i++) b[i] -= b[j]*a[j*m+i];
+        //printf("\n");
+        //for (i=0;i<n;i++) printf(" %7.5f", b[i]);
     }
     b[0] /= a[0];
 
+    delete[] u;
+    delete[] beta;
     return;
 }
 
@@ -372,18 +389,5 @@ noexcept
     }
     d[n-1] = a[(n-1)*n+n-1];
     if (d[n-1] == 0e0) sign = 1;
-#ifdef DEBUG
-/*
-    printf("\n\tDiagonal part of R is:");
-    for (int l=0; l<n; l++) printf("%5.1f ", d[l]);
-    printf("\n\tHouseholder vectors:");
-    for (int l=0; l<n-1; l++) {
-        printf("\n\t");
-        for (int m=l+1; m<n; m++) {
-            printf("%5.1f ", a[m*n+l]*c[l]);
-        }
-    }
-*/
-#endif
     return;
 }

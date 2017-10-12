@@ -56,12 +56,13 @@ int main()
     printf("\nMatrix A after householder_qr(...) :\n");
     for (int i=0; i<rows; i++) {
         for (int j=0; j<cols; j++) {
-            printf("%+15.10f ",A_cw[j*rows+i]);
+            printf("%+20.15f ",A_cw[j*rows+i]);
         }
         printf("\n");
     }
     
     // get the (thin) Q matrix
+    /*
     double q[cols*cols];
     thin_q(A_cw, beta, q, rows, cols);
     printf("\nMatrix thin-Q after householder_qr(...) :\n");
@@ -71,6 +72,7 @@ int main()
         }
         printf("\n");
     }
+    */
     
     // get the Q matrix
     double qq[cols*rows];
@@ -79,12 +81,13 @@ int main()
     printf("\nMatrix Q after householder_qr(...) :\n");
     for (int i=0; i<rows; i++) {
         for (int j=0; j<cols; j++) {
-            printf("%+15.10f ",qq[j*rows+i]);
+            printf("%+20.15f ",qq[j*rows+i]);
         }
         printf("\n");
     }
 
     // Perform QR via Eigen
+    Eigen::IOFormat fmt(15);
     Eigen::MatrixXd thinQ (Eigen::MatrixXd::Identity(rows,cols)),
                     Q;
     Eigen::HouseholderQR<Eigen::MatrixXd> qr(A_rw);
@@ -92,18 +95,33 @@ int main()
     thinQ = qr.householderQ() * thinQ;
     Eigen::MatrixXd R  = qr.matrixQR().template  triangularView<Eigen::Upper>();
     Eigen::MatrixXd QR = qr.matrixQR();
-    std::cout << "\nThe A matrix is:\n" << QR << "\n\n";
-    std::cout << "The R (upper triangular) matrix is:\n" << R << "\n\n";
-    std::cout << "The complete unitary matrix Q is:\n" << Q << "\n\n";
-    std::cout << "The thin matrix Q is:\n" << thinQ << "\n\n";
-    std::cout << "Householder factors:\n" << qr.hCoeffs() << "\n\n";
+    std::cout << "\nThe A matrix is:\n" << QR.format(fmt) << "\n\n";
+    // std::cout << "The R (upper triangular) matrix is:\n" << R << "\n\n";
+    // std::cout << "The complete unitary matrix Q is:\n" << Q.format(fmt) << "\n\n";
+    std::cout << "The thin matrix Q is:\n" << thinQ.format(fmt) << "\n\n";
+    // std::cout << "Householder factors:\n" << qr.hCoeffs() << "\n\n";
     
+    printf("\n-----------------------------------------------------------------------------------");
+    printf("\nLeast Squares via QR");
+    printf("\n-----------------------------------------------------------------------------------");
     // Solve an LS system
     double C[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
                 -10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,
                 100, 81, 64, 49, 36, 25, 16,9,4,1,0,1,4,9,16,25,36,49,64,81,100};
     double y[] = {-35.84000,-36.27000,-35.78800,-34.39400,-32.08800,-28.87000,-24.74000,-19.69800,-13.74400, -6.87800,  0.90000,  9.59000, 19.19200, 29.70600, 41.13200, 53.47000, 66.72000, 80.88200, 95.95600,111.94200,128.84000};
 
+    printf("\nMatrix A\n");
+    for (int i=0; i<21; i++) {
+        for (int j=0; j<3; j++) {
+            printf("%+10.5f ",C[j*21+i]);
+        }
+        printf("\n");
+    }
+    printf("\nVector b\n");
+    for (int i=0; i<21; i++) {
+            printf("%+10.5f ",y[i]);
+    }
+    
     ls_qrsolve(C, y, 21, 3);
     printf("\n-- QR Solve -- (mine)");
     for (int i=0; i<3; i++) printf("\n\tx[%1d] = %+7.3f", i+1, y[i]);
