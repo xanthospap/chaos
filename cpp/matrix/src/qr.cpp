@@ -7,17 +7,17 @@
 #include <random>
 #endif
 
-/// \brief Back substitution, column version.
+/// @brief Back substitution, column version.
 ///
 /// If \f$U\in {\Re}^{n\times n}\f$ is upper triangular and \f$b\in{\Re}^n \f$,
 /// then this algorithm overwrittes b with the solution to \f$Ux=b\f$. U is
 /// assumed to be nonsingular.
 ///
-/// \param[in]     u  Upper-triangular matrix, in column-majorm storage; its size
+/// @param[in]     u  Upper-triangular matrix, in column-majorm storage; its size
 ///                   is nxn.
-/// \param[in,out] b  At input the right-hand side vector of the equation Ux=b.
+/// @param[in,out] b  At input the right-hand side vector of the equation Ux=b.
 ///                   At output, it is overwritten by the solution vector x.
-/// \param[in]     n  Size of the matrix U and vectors b and x.
+/// @param[in]     n  Size of the matrix U and vectors b and x.
 ///
 /// Reference, Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 90
 void
@@ -34,22 +34,22 @@ noexcept
 }
 
 
-/// \brief Compute Householder vector.
+/// @brief Compute Householder vector.
 ///
 /// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
 /// with \f$u(0)=1\f$ and \f$\beta \in \Re\f$ (scalar), such that 
 /// \f$P = I_n - \beta uu^T\f$ is orthogonal and \f$Px = \|x\|_2 e_1\f$.
 ///
-/// \param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
-/// \param[in]  n     Size of vectors x and u. Only their first n elements
+/// @param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
+/// @param[in]  n     Size of vectors x and u. Only their first n elements
 ///                   are considered (both x and u can have sizes larger than
 ///                   n, but not smaller).
-/// \param[out] u     Vector of size >= n; at output it contains the result
+/// @param[out] u     Vector of size >= n; at output it contains the result
 ///                   Householder vector u. Only its first n elements are 
 ///                   read/written (aka \f$u\in{\Re}^{n}\f$).
-/// \return           beta (aka \f$\beta\in\Re\f$).
+/// @return           beta (aka \f$\beta\in\Re\f$).
 ///
-/// \note A production version of this algorithm, may involve a preliminary
+/// @note A production version of this algorithm, may involve a preliminary
 ///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
 ///       scale x to x <- x / |x|.
 ///
@@ -85,21 +85,21 @@ noexcept
     return beta;
 }
 
-/// \brief Compute Householder vector.
+/// @brief Compute Householder vector.
 ///
 /// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
 /// such that \f$P = I_n - 2uu^T\f$ is orthogonal and \f$Px = \|x\|_2 e_1\f$.
 ///
-/// \param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
-/// \param[in]  n     Size of vectors x and u. Only their first n elements
+/// @param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
+/// @param[in]  n     Size of vectors x and u. Only their first n elements
 ///                   are considered (both x and u can have sizes larger than
 ///                   n, but not smaller).
-/// \param[out] u     Vector of size >= n; at output it contains the result
+/// @param[out] u     Vector of size >= n; at output it contains the result
 ///                   Householder vector u. Only its first n elements are 
 ///                   read/written (aka \f$u\in{\Re}^{n}\f$).
-/// \return           beta (aka \f$\beta\in\Re\f$).
+/// @return           beta (aka \f$\beta\in\Re\f$).
 ///
-/// \note A production version of this algorithm, may involve a preliminary
+/// @note A production version of this algorithm, may involve a preliminary
 ///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
 ///       scale x to x <- x / |x|.
 ///
@@ -119,7 +119,7 @@ noexcept
     return 2e0;
 }
 
-/// \brief Compute Householder QR decomposition.
+/// @brief Compute Householder QR decomposition.
 ///
 /// Given \f$A\in{\Re}^{m\times n}\f$ with \$fm\geq n\f$, the following
 /// algorithm finds Householder matrices \f$H_1, H_2 ..., H_n\f$ such that if
@@ -129,12 +129,12 @@ noexcept
 /// \f$A(j+1:m, j), j<m\f$.
 /// Matrix A must be stored column-wise.
 /// 
-/// \param[in]  a    The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise).
-/// \param[in]  b    A vector of size n; at output, it contains the \f$\beta\f$
+/// @param[in]  a    The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise).
+/// @param[in]  b    A vector of size n; at output, it contains the \f$\beta\f$
 ///                  coefficients for each of the n-1 Householder vectors.
-/// \param[in]  m    Number of rows of a matrix A.
-/// \param[in]  n    Number of columns of matrix A.
-/// \param[out] sign Unused.
+/// @param[in]  m    Number of rows of a matrix A.
+/// @param[in]  n    Number of columns of matrix A.
+/// @param[out] sign Unused.
 ///
 /// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
 void
@@ -183,6 +183,24 @@ noexcept
     return;
 }
 
+/// @brief Compute Householder QR decomposition.
+///
+/// Given \f$A\in{\Re}^{m\times n}\f$ with \$fm\geq n\f$, the following
+/// algorithm finds Householder matrices \f$H_1, H_2 ..., H_n\f$ such that if
+/// \f$Q= H_1 H_2 ... H_n \f$, then \f$Q^T A = R \f$ is upper triangular. The
+/// upper triangular part of A is overwritten by the upper triangular part of
+/// R and components j+1:m of the jth Householder vector are stored in
+/// \f$A(j+1:m, j), j<m\f$.
+/// Matrix A must be stored column-wise.
+/// 
+/// @param[in]  a    The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise).
+/// @param[in]  b    A vector of size n; at output, it contains the \f$\beta\f$
+///                  coefficients for each of the n-1 Householder vectors.
+/// @param[in]  m    Number of rows of a matrix A.
+/// @param[in]  n    Number of columns of matrix A.
+/// @param[out] sign Unused.
+///
+/// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
 void
 householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
@@ -220,40 +238,28 @@ noexcept
     return;
 }
 
+/// @brief Compute the thin Q matrix of a QR factorization.
+///
+/// This function computes the thin Q matrix of a QR factorization, given that
+/// the factorization is already performed (via householder_qr) and its result
+/// is stored in the input matrix a.
+/// The upper triangular part of a must hold the upper triangular part of
+/// R and components j+1:m of the jth Householder vector should be stored in
+/// \f$a(j+1:m, j), j<m\f$ (this is exactly the output of householder_qr).
+/// The result Q matrix, \f$Q \in {\Re}^{m \times n}\f$ is written in the
+/// (input) q array (which should be of size m*n).
+/// All matrices are supposed to be stored column-wise.
+///
+/// @param[in] a  The result of a householder QR factorization (via 
+///               householder_qr). The size of this matrix is m*n.
+/// @param[in] b  A vector of size n; it contains the \f$\beta\f$ 
+///               coefficients for each of the n-1 Householder vectors (computed
+///               as part of the householder_qr algorithm).
+/// @param[in] q  At output the m*n Q matrix
+///
 /// Algorithm 5.1.5, pg. 213
 void
 thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
-{
-    int i,j,col;
-    double sum,*u;
-
-    try {
-        u = new double[m];
-    } catch (std::bad_alloc&) {
-        return;
-    }
-
-    int r = n;
-    // Q e R(nxn)
-    std::fill(q, q+n*n, 0e0);
-    for (col = 0; col < n; col++) q[col*n+col] = 1e0;
-
-    for (j = r-1; j >= 0; j--) {
-        u[j] = 1e0;
-        for (i = j+1; i < n; i++) u[i] = a[j*m+i];
-        for (col = j; col < n; col++) {
-            for (sum = 0e0, i = j; i < n; i++) sum += u[i]*q[col*n+i];
-            sum *= b[j];
-            for (i = j; i < n; i++) q[col*n+i] -= sum*u[i];
-        }
-    }
-
-    delete[] u;
-    return;
-}
-
-void
-qr_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
 {
     int i,j,col;
     double sum,*u;
@@ -301,33 +307,19 @@ ls_qrsolve(double *__restrict__ a, double *__restrict__ b, int m, int n)
 
     // Overwrite a with its QR factorization
     householder_qr(a, beta, m, n, sign);
-    printf("\n\tHouseholder QR of A, is:\n");
-    for (int row=0;row<m;row++) {
-        for (int col=0;col<n;col++) {
-            printf(" %7.3f ", a[col*m+row]);
-        }
-        printf("\n");
-    }
 
     // Compute b <- (Q^T)*b
     for (j = 0; j < n; j++) {
-        printf("\nj=%1d",j);
         for (sum = b[j], i = j+1; i < m; i++) sum += a[j*m+i]*b[i];
-        printf(" sum=%7.3f", sum);
         sum *= beta[j];
         b[j] -= sum;
         for (i = j+1; i < m; i++) b[i] -= sum*a[j*m+i];
     }
-    printf("\nNew b vector:");
-    for (i=0; i<m;i++) printf(" %7.5f", b[i]);
 
     // Solve R(1:n,1:n) * x = n(1:n)
     for (j = n-1; j > 0; j--) {
-        printf("\nb[%1d] = %7.5f / %7.5f",j, b[j], a[j*m+j]);
         b[j] /= a[j*m+j];
         for (i = 0; i < j-1; i++) b[i] -= b[j]*a[j*m+i];
-        //printf("\n");
-        //for (i=0;i<n;i++) printf(" %7.5f", b[i]);
     }
     b[0] /= a[0];
 
