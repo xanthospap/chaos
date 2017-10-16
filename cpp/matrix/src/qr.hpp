@@ -1,12 +1,13 @@
 /// @brief This file contains algorithms connected to QR factorization.
 ///
-/// @notes
+/// @note
 ///     - All matrix/vector indexes start from 0.
 ///     - Unless otherwise stated, all matrices are stored in column-major form.
 ///
 
 ///
 /// @mainpage
+///
 /// @section sec-1 QR decomposition
 /// The QR factorization of an m-by-n matrix A, is given by: \f$A=QR\f$, where
 /// \f$Q\in {\Re}^{m\times m}\f$ is orthogonal and \f$R\in {\Re}^{m\times n}\f$
@@ -18,10 +19,11 @@
 /// of zeroes, it is often useful to partition R, or both R and Q:
 /// \f[ A=QR=Q\left( \begin{array}{c} R_1 \\ 0 \end{array} \right) = \left( Q_1  Q_2 \right) \left( \begin{array}{c} R_1 \\ 0 \end{array} \right) = Q_1 R_1 \f]
 /// where \f$R_1 \f$ is an \f$n \times n\f$ upper triangular matrix, \f$0\f$ 
-/// is an \f$(m−n) \times n\f$ zero matrix, \f$Q_1 \f$ is \f$m \times n\f$, 
-/// \f$Q_2 \f$ is \f$m\times (m−n)\f$, and \f$Q_1 \f$ and \f$Q_2 \f$ both have 
+/// is an \f$(m-n) \times n\f$ zero matrix, \f$Q_1 \f$ is \f$m \times n\f$, 
+/// \f$Q_2 \f$ is \f$m\times (m-n)\f$, and \f$Q_1 \f$ and \f$Q_2 \f$ both have 
 /// orthogonal columns.
 /// \f$Q_1 R_1 \f$ is sometimes called the thin QR factorization of A.
+///
 /// @section sec-2 QR decomposition and Least Squares
 /// QR factorization can be used to solve LS problems. Consider the data matrix
 /// \f$A\in {\Re}^{m\times n}\f$ and the observation vector \f$b\in {\Re}^m\f$

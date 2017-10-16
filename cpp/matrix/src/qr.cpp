@@ -85,43 +85,9 @@ noexcept
     return beta;
 }
 
-/// @brief Compute Householder vector.
-///
-/// Given \f$x\in{\Re}^{n}\f$, this function computes vector \f$u\in{\Re}^{n}\f$,
-/// such that \f$P = I_n - 2uu^T\f$ is orthogonal and \f$Px = \|x\|_2 e_1\f$.
-///
-/// @param[in]  x     Input vector of size >= n (aka \f$x\in{\Re}^{n}\f$)
-/// @param[in]  n     Size of vectors x and u. Only their first n elements
-///                   are considered (both x and u can have sizes larger than
-///                   n, but not smaller).
-/// @param[out] u     Vector of size >= n; at output it contains the result
-///                   Householder vector u. Only its first n elements are 
-///                   read/written (aka \f$u\in{\Re}^{n}\f$).
-/// @return           beta (aka \f$\beta\in\Re\f$).
-///
-/// @note A production version of this algorithm, may involve a preliminary
-///       scaling (i.e. normalization) of the x vector to avoid overflow; i.e.
-///       scale x to x <- x / |x|.
-///
-/// Reference: http://www.math.usm.edu/lambers/mat610/sum10/lecture9.pdf
-double
-householder_vec2(const double *__restrict__ x, int n, double *__restrict__ u)
-noexcept
-{
-    int    i;
-    double sum,
-           alpha;
-
-    for (sum = 0e0, i = 0; i < n; i++) sum += x[i]*x[i];
-    alpha = std::sqrt(sum);
-    u[0] = -std::copysign(std::sqrt((alpha-x[0])/2e0*alpha), x[0]);
-    for (i = 1; i < n; i++) u[i] = -x[i]/(2e0*alpha*u[0]);
-    return 2e0;
-}
-
 /// @brief Compute Householder QR decomposition.
 ///
-/// Given \f$A\in{\Re}^{m\times n}\f$ with \$fm\geq n\f$, the following
+/// Given \f$A\in{\Re}^{m\times n}\f$ with \f$m\geq n\f$, the following
 /// algorithm finds Householder matrices \f$H_1, H_2 ..., H_n\f$ such that if
 /// \f$Q= H_1 H_2 ... H_n \f$, then \f$Q^T A = R \f$ is upper triangular. The
 /// upper triangular part of A is overwritten by the upper triangular part of
@@ -129,78 +95,16 @@ noexcept
 /// \f$A(j+1:m, j), j<m\f$.
 /// Matrix A must be stored column-wise.
 /// 
-/// @param[in]  a    The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise).
-/// @param[in]  b    A vector of size n; at output, it contains the \f$\beta\f$
-///                  coefficients for each of the n-1 Householder vectors.
-/// @param[in]  m    Number of rows of a matrix A.
-/// @param[in]  n    Number of columns of matrix A.
-/// @param[out] sign Unused.
+/// @param[in,out]  a  The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise). At
+///                    output it is overwritten by the upper triangular part of
+///                    R and Householder vector components.
+/// @param[in]      b  A vector of size n; at output, it contains the \f$\beta\f$
+///                    coefficients for each of the n-1 Householder vectors.
+/// @param[in]      m  Number of rows of a matrix A.
+/// @param[in]      n  Number of columns of matrix A.
+/// @param[out] sign   If non-zero, then the function has ended with error.
 ///
-/// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
-void
-householder_qr_alpha(double *__restrict__ a, double *__restrict__ b, int m, int n,
-    int &sign)
-noexcept
-{
-    double sum,mi,*u;
-    int    row,col,j;
-
-    try {
-        u = new double[m];
-    } catch (std::bad_alloc&) {
-        sign = 1;
-        return;
-    }
-
-    for (col = 0; col < n; col++) {
-        //  compute u vector (i.e. Householder vector) based on the input
-        //+ vector A(col:m, col).
-        for (sum = 0e0, row = col+1; row < m; row++) sum += a[col*m+row]*a[col*m+row];
-        mi      = std::sqrt(a[col*m+col]*a[col*m+col]+sum);
-        u[0]    = (a[col*m+col]>=0e0)
-                ? (-sum/(a[col*m+col]+mi))
-                : (a[col*m+col]-mi);
-        b[col]  = 2e0*(u[0]*u[0])/(sum+u[0]*u[0]);
-        for (row = col+1; row < m; row++) u[row-col] = a[col*m+row]/u[0];
-        u[0] /= u[0];
-
-        // Compute A(col, col)
-        for (sum = 0e0, row = col; row < m; row++) sum += a[col*m+row]*u[row-col];
-        a[col*m+col] -= sum*b[col];
-        
-        // Assign householder vector to A(col+1:m, col)
-        for (row = col+1; row < m; row++) a[col*m+row] = u[row-col];
-        
-        // Compute A(col+1:m, col+1:n) = (I-buu^T)A(col+1:m, col+1:n)
-        for (j = col+1; j < n; j++) {
-            for (sum = 0e0, row = col; row < m; row++) sum += a[j*m+row]*u[row-col];
-            sum *= b[col];
-            for (row = col; row < m; row++) a[j*m+row] -= sum*u[row-col];
-        }
-    }
-
-    delete[] u;
-    return;
-}
-
-/// @brief Compute Householder QR decomposition.
-///
-/// Given \f$A\in{\Re}^{m\times n}\f$ with \$fm\geq n\f$, the following
-/// algorithm finds Householder matrices \f$H_1, H_2 ..., H_n\f$ such that if
-/// \f$Q= H_1 H_2 ... H_n \f$, then \f$Q^T A = R \f$ is upper triangular. The
-/// upper triangular part of A is overwritten by the upper triangular part of
-/// R and components j+1:m of the jth Householder vector are stored in
-/// \f$A(j+1:m, j), j<m\f$.
-/// Matrix A must be stored column-wise.
-/// 
-/// @param[in]  a    The matrix \f$A\in{\Re}^{m\times n}\f$ (column-wise).
-/// @param[in]  b    A vector of size n; at output, it contains the \f$\beta\f$
-///                  coefficients for each of the n-1 Householder vectors.
-/// @param[in]  m    Number of rows of a matrix A.
-/// @param[in]  n    Number of columns of matrix A.
-/// @param[out] sign Unused.
-///
-/// ref  Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
+/// Reference: Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 224
 void
 householder_qr(double *__restrict__ a, double *__restrict__ b, int m, int n,
     int &sign)
@@ -244,22 +148,27 @@ noexcept
 /// the factorization is already performed (via householder_qr) and its result
 /// is stored in the input matrix a.
 /// The upper triangular part of a must hold the upper triangular part of
-/// R and components j+1:m of the jth Householder vector should be stored in
-/// \f$a(j+1:m, j), j<m\f$ (this is exactly the output of householder_qr).
+/// R and components \f$j+1:m\f$ of the jth Householder vector should be stored
+/// in \f$a(j+1:m, j), j<m\f$ (this is exactly the output of householder_qr).
 /// The result Q matrix, \f$Q \in {\Re}^{m \times n}\f$ is written in the
 /// (input) q array (which should be of size m*n).
+/// Note that this is the thin Q matrix, i.e. \f$Q_1 \in {\Re}^{m \times n}\f$
+/// and \f$Q = \left( Q_1  Q_2 \right)\f$, \f$Q_2 \in {\Re}^{m \times (m-n)}\f$.
 /// All matrices are supposed to be stored column-wise.
 ///
-/// @param[in] a  The result of a householder QR factorization (via 
-///               householder_qr). The size of this matrix is m*n.
-/// @param[in] b  A vector of size n; it contains the \f$\beta\f$ 
-///               coefficients for each of the n-1 Householder vectors (computed
-///               as part of the householder_qr algorithm).
-/// @param[in] q  At output the m*n Q matrix
+/// @param[in]     a  The result of a householder QR factorization (via 
+///                   householder_qr). The size of this matrix is m*n.
+/// @param[in]     b  A vector of size n; it contains the \f$\beta\f$ 
+///                   coefficients for each of the n-1 Householder vectors
+///                   (computed as part of the householder_qr algorithm).
+/// @param[in,out] q  At output the m*n Q matrix
+/// @param[in]     m  Number of rows of a and q matrices.
+/// @param[in]     n  Number of columns of a and q matrices.
 ///
-/// Algorithm 5.1.5, pg. 213
+/// Reference: Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 213
 void
-thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, int m, int n)
+thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q,
+    int m, int n)
 {
     int i,j,col;
     double sum,*u;
@@ -287,11 +196,21 @@ thin_q(double *__restrict__ a, double *__restrict__ b, double *__restrict__ q, i
     return;
 }
 
-/// \brief Householder LS solution.
+/// @brief Householder-QR LS solution.
 ///
 /// If \f$A \in {\Re}^{m \times n}\f$ has full comumn rank and 
 /// \f$b \in {\Re}^m \f$, then this algorithm computes a vector \f$x_{LS}\f$
 /// such that \f$ \| A x_{LS} - b \| \f$ is minimum.
+/// More simply, this algorithm solves the (overdetermined) Least Squares
+/// system \f$Ax=b\f$, via QR factorization, using the Householder algorithm.
+///
+/// @param[in]     a  The design or data matrix; should be of size mxn.
+/// @param[in,out] b  The observation vector, of size m. At output, it is
+///                   overwritten by the LS solution vector.
+/// @param[in]     m  Number of observations (rows of a and b).
+/// @param[in]     n  Number of parameters (columns of a).
+///
+/// Reference: Matrix Computations, G.H. Colub, CF.V. Loan, 1996, pg. 240
 void
 ls_qrsolve(double *__restrict__ a, double *__restrict__ b, int m, int n)
 {
